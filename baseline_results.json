@@ -1,0 +1,73 @@
+{
+  "mode": "Deterministic Fallback (Mode B)",
+  "tasks": {
+    "loop_sum": {
+      "task_id": "loop_sum",
+      "difficulty": "easy",
+      "final_score": 0.8125,
+      "correctness": 1.0,
+      "optimization": 0.6875,
+      "reward": 1.0
+    },
+    "nested_search": {
+      "task_id": "nested_search",
+      "difficulty": "medium",
+      "final_score": 0.8125,
+      "correctness": 1.0,
+      "optimization": 0.6875,
+      "reward": 1.0
+    },
+    "string_builder": {
+      "task_id": "string_builder",
+      "difficulty": "medium",
+      "final_score": 0.7571428571428571,
+      "correctness": 1.0,
+      "optimization": 0.5952380952380952,
+      "reward": 1.0
+    },
+    "combined_opts": {
+      "task_id": "combined_opts",
+      "difficulty": "hard",
+      "final_score": 0.7975000000000001,
+      "correctness": 1.0,
+      "optimization": 0.6625000000000002,
+      "reward": 1.0
+    },
+    "dictionary_frequency": {
+      "task_id": "dictionary_frequency",
+      "difficulty": "medium",
+      "final_score": 0.8178571428571428,
+      "correctness": 1.0,
+      "optimization": 0.6964285714285713,
+      "reward": 1.0
+    },
+    "generator_vs_list": {
+      "task_id": "generator_vs_list",
+      "difficulty": "medium",
+      "final_score": 0.4357142857142857,
+      "correctness": 1.0,
+      "optimization": 0.05952380952380952,
+      "reward": 0.3786
+    },
+    "fibonacci_memoization": {
+      "task_id": "fibonacci_memoization",
+      "difficulty": "hard",
+      "final_score": 0.30000000000000004,
+      "correctness": 1.0,
+      "optimization": 0.0,
+      "reward": -0.05
+    },
+    "loop_invariant_motion": {
+      "task_id": "loop_invariant_motion",
+      "difficulty": "hard",
+      "final_score": 0.7750000000000001,
+      "correctness": 1.0,
+      "optimization": 0.6250000000000001,
+      "reward": 1.0
+    }
+  },
+  "average_score": 0.6885,
+  "success_rate": 1.0,
+  "correct_count": 8,
+  "total_tasks": 8
+}

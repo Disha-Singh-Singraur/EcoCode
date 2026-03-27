@@ -1,0 +1,153 @@
+# EcoCode Environment Configuration
+# OpenEnv-compatible metadata
+
+name: ecocode
+version: "1.0.0"
+description: >
+  Green Code Optimization Environment — an interactive environment where
+  an AI agent receives inefficient Python code and iteratively refactors
+  it to improve efficiency while preserving exact output correctness.
+
+author: EcoCode Team
+license: MIT
+
+# Environment interface
+interface:
+  reset:
+    description: Reset environment with a task
+    endpoint: /reset
+    method: POST
+    request_schema:
+      type: object
+      properties:
+        task_id:
+          type: string
+          description: Task identifier (optional, defaults to first task)
+    response_schema:
+      $ref: "#/schemas/Observation"
+
+  step:
+    description: Submit optimized code
+    endpoint: /step
+    method: POST
+    request_schema:
+      type: object
+      properties:
+        rewritten_code:
+          type: string
+          description: Agent's optimized version of the code
+      required:
+        - rewritten_code
+    response_schema:
+      type: object
+      properties:
+        observation:
+          $ref: "#/schemas/Observation"
+        reward:
+          $ref: "#/schemas/Reward"
+        done:
+          type: boolean
+        info:
+          type: object
+
+  state:
+    description: Get current environment state
+    endpoint: /state
+    method: GET
+
+# Schemas
+schemas:
+  Observation:
+    type: object
+    properties:
+      current_code:
+        type: string
+        description: Current version of the code
+      original_code:
+        type: string
+        description: Original inefficient code
+      test_cases:
+        type: array
+        items:
+          type: object
+          properties:
+            input:
+              type: string
+            expected_output:
+              type: string
+      difficulty:
+        type: string
+        enum: [easy, medium, hard]
+      step_count:
+        type: integer
+
+  Action:
+    type: object
+    properties:
+      rewritten_code:
+        type: string
+        description: Optimized version of the code
+    required:
+      - rewritten_code
+
+  Reward:
+    type: object
+    properties:
+      score:
+        type: number
+        description: Reward value for this step
+      breakdown:
+        type: object
+        properties:
+          correctness:
+            type: number
+          optimization:
+            type: number
+          penalty:
+            type: number
+          reason:
+            type: string
+      feedback:
+        type: string
+
+  GraderResult:
+    type: object
+    properties:
+      correctness_score:
+        type: number
+        description: "0.0 or 1.0 (binary correctness gate)"
+      optimization_score:
+        type: number
+        description: "0.0-1.0 AST improvement score"
+      penalty:
+        type: number
+        description: "Penalty for no improvement or invalid code"
+      final_score:
+        type: number
+        description: "Combined score, clamped to 0.0-1.0"
+      details:
+        type: string
+        description: "Human-readable grading explanation"
+
+# Tasks
+tasks:
+  - id: loop_sum
+    difficulty: easy
+    description: Optimize loop-based sum using Python builtins
+  - id: nested_search
+    difficulty: medium
+    description: Replace nested loop search with set operations
+  - id: string_builder
+    difficulty: medium
+    description: Optimize string concatenation using str.join()
+  - id: combined_opts
+    difficulty: hard
+    description: Apply multiple combined optimizations
+
+# Deployment
+deployment:
+  runtime: python3.11
+  port: 7860
+  dockerfile: Dockerfile
+  compatible_with:
+    - huggingface_spaces
