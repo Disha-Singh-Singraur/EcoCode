@@ -1,3 +1,12 @@
+---
+title: EcoCode
+emoji: 🌱
+colorFrom: green
+colorTo: blue
+sdk: docker
+pinned: false
+app_port: 7860
+---
 # 🌱 EcoCode: Green Code Optimization Environment
 
 An OpenEnv-compatible interactive environment where an AI agent receives inefficient ("dirty") Python code and iteratively refactors it to improve efficiency (time and memory) while preserving exact output correctness.
