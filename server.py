@@ -174,6 +174,11 @@ def run_baseline():
         }
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.get("/", response_class=HTMLResponse)
 def root():
     """Health check / info endpoint with visual dashboard."""
