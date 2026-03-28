@@ -176,6 +176,27 @@ tasks:
   - id: loop_invariant_motion
     difficulty: hard
     description: Move constant computation outside loops
+  - id: math_simplification
+    difficulty: medium
+    description: Replace loop with O(1) Gaussian sum formula
+  - id: any_builtin
+    difficulty: easy
+    description: Use any() builtin instead of search loop
+  - id: all_builtin
+    difficulty: easy
+    description: Use all() builtin instead of search loop
+  - id: enumerate_builtin
+    difficulty: easy
+    description: Use enumerate() instead of range(len())
+  - id: zip_builtin
+    difficulty: medium
+    description: Use zip() for parallel list iteration
+  - id: max_builtin
+    difficulty: easy
+    description: Use max() instead of tracking highest value
+  - id: filter_builtin
+    difficulty: medium
+    description: Use filter() or comprehension for conditional append
 
 # Deployment
 deployment:

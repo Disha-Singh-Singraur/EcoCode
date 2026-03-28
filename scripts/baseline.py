@@ -73,6 +73,36 @@ FALLBACK_SOLUTIONS = {
         "    base_fee = float(parts[2])\n"
         "    return [t * multiplier + base_fee for t in transactions]\n"
     ),
+    "math_simplification": (
+        "def sum_to_n(n):\n"
+        "    return n * (n + 1) // 2\n"
+    ),
+    "any_builtin": (
+        "def contains_positive(numbers):\n"
+        "    return any(n > 0 for n in numbers)\n"
+    ),
+    "all_builtin": (
+        "def is_all_positive(numbers):\n"
+        "    return all(n > 0 for n in numbers)\n"
+    ),
+    "enumerate_builtin": (
+        "def format_indexed(items):\n"
+        "    return [str(i) + '-' + str(val) for i, val in enumerate(items)]\n"
+    ),
+    "zip_builtin": (
+        "def combine_lists(list_a, list_b):\n"
+        "    return [a + b for a, b in zip(list_a, list_b)]\n"
+    ),
+    "max_builtin": (
+        "def find_highest(numbers):\n"
+        "    if not numbers:\n"
+        "        return None\n"
+        "    return max(numbers)\n"
+    ),
+    "filter_builtin": (
+        "def get_evens(numbers):\n"
+        "    return [n for n in numbers if n % 2 == 0]\n"
+    ),
 }
 
 # ═══════════════════════════════════════════════════════════════════════

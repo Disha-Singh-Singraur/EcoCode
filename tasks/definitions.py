@@ -364,6 +364,178 @@ TASKS = {
         "expected_patterns": ["remove_redundant_vars"],
     },
 
+    # ──────────────────────────────────────────────────────────────────────
+    # MEDIUM: O(N) Loop Sum -> O(1) Gaussian Sum
+    # ──────────────────────────────────────────────────────────────────────
+    "math_simplification": {
+        "id": "math_simplification",
+        "description": (
+            "Optimize a function that computes the sum of integers from 1 to N "
+            "using an O(N) for-loop. Replace with the O(1) Gaussian sum formula."
+        ),
+        "difficulty": "medium",
+        "dirty_code": (
+            "def sum_to_n(n):\n"
+            "    total = 0\n"
+            "    for i in range(1, n + 1):\n"
+            "        total = total + i\n"
+            "    return total\n"
+        ),
+        "test_cases": [
+            {"input": "print(sum_to_n(100000))", "expected_output": "5000050000"},
+            {"input": "print(sum_to_n(10))", "expected_output": "55"},
+            {"input": "print(sum_to_n(0))", "expected_output": "0"},
+            {"input": "print(sum_to_n(1))", "expected_output": "1"},
+        ],
+        "expected_patterns": ["remove_redundant_vars", "remove_nested_loops"],
+    },
+
+    # ──────────────────────────────────────────────────────────────────────
+    # EASY: For Loop Search -> any() builtin
+    # ──────────────────────────────────────────────────────────────────────
+    "any_builtin": {
+        "id": "any_builtin",
+        "description": "Optimize a loop that checks if any element in a list meets a condition. Use the any() builtin.",
+        "difficulty": "easy",
+        "dirty_code": (
+            "def contains_positive(numbers):\n"
+            "    found = False\n"
+            "    for i in range(len(numbers)):\n"
+            "        if numbers[i] > 0:\n"
+            "            found = True\n"
+            "            break\n"
+            "    return found\n"
+        ),
+        "test_cases": [
+            {"input": "print(contains_positive([-10, -5, 0, 1]))", "expected_output": "True"},
+            {"input": "print(contains_positive([-1, -2, -3]))", "expected_output": "False"},
+            {"input": "print(contains_positive([]))", "expected_output": "False"},
+            {"input": "print(contains_positive(list(range(-5000, 5001))))", "expected_output": "True"},
+        ],
+        "expected_patterns": ["use_builtin_any", "remove_index_loop"],
+    },
+
+    # ──────────────────────────────────────────────────────────────────────
+    # EASY: For Loop Search -> all() builtin
+    # ──────────────────────────────────────────────────────────────────────
+    "all_builtin": {
+        "id": "all_builtin",
+        "description": "Optimize a loop that checks if all elements in a list meet a condition. Use the all() builtin.",
+        "difficulty": "easy",
+        "dirty_code": (
+            "def is_all_positive(numbers):\n"
+            "    result = True\n"
+            "    for i in range(len(numbers)):\n"
+            "        if numbers[i] <= 0:\n"
+            "            result = False\n"
+            "            break\n"
+            "    return result\n"
+        ),
+        "test_cases": [
+            {"input": "print(is_all_positive([1, 2, 3, 4]))", "expected_output": "True"},
+            {"input": "print(is_all_positive([10, -5, 3]))", "expected_output": "False"},
+            {"input": "print(is_all_positive([]))", "expected_output": "True"},
+            {"input": "print(is_all_positive(list(range(1, 100000))))", "expected_output": "True"},
+        ],
+        "expected_patterns": ["use_builtin_all", "remove_index_loop"],
+    },
+
+    # ──────────────────────────────────────────────────────────────────────
+    # EASY: range(len()) -> enumerate()
+    # ──────────────────────────────────────────────────────────────────────
+    "enumerate_builtin": {
+        "id": "enumerate_builtin",
+        "description": "Optimize a list mapping function currently using range(len()). Use the enumerate() builtin.",
+        "difficulty": "easy",
+        "dirty_code": (
+            "def format_indexed(items):\n"
+            "    result = []\n"
+            "    for i in range(len(items)):\n"
+            "        val = str(i) + '-' + str(items[i])\n"
+            "        result.append(val)\n"
+            "    return result\n"
+        ),
+        "test_cases": [
+            {"input": "print(format_indexed(['a', 'b', 'c']))", "expected_output": "['0-a', '1-b', '2-c']"},
+            {"input": "print(format_indexed([]))", "expected_output": "[]"},
+            {"input": "print(len(format_indexed(list(range(20000)))))", "expected_output": "20000"},
+            {"input": "print(format_indexed(['x']))", "expected_output": "['0-x']"},
+        ],
+        "expected_patterns": ["use_builtin_enumerate", "remove_index_loop"],
+    },
+
+    # ──────────────────────────────────────────────────────────────────────
+    # MEDIUM: Multi-list index loop -> zip()
+    # ──────────────────────────────────────────────────────────────────────
+    "zip_builtin": {
+        "id": "zip_builtin",
+        "description": "Optimize an operation combining two lists piece-by-piece using double indexing. Use the zip() builtin.",
+        "difficulty": "medium",
+        "dirty_code": (
+            "def combine_lists(list_a, list_b):\n"
+            "    result = []\n"
+            "    for i in range(len(list_a)):\n"
+            "        result.append(list_a[i] + list_b[i])\n"
+            "    return result\n"
+        ),
+        "test_cases": [
+            {"input": "print(combine_lists([1, 2], [3, 4]))", "expected_output": "[4, 6]"},
+            {"input": "print(combine_lists([], []))", "expected_output": "[]"},
+            {"input": "print(len(combine_lists(list(range(20000)), list(range(20000)))))", "expected_output": "20000"},
+            {"input": "print(combine_lists(['a', 'b'], ['x', 'y']))", "expected_output": "['ax', 'by']"},
+        ],
+        "expected_patterns": ["use_builtin_zip", "remove_index_loop"],
+    },
+
+    # ──────────────────────────────────────────────────────────────────────
+    # EASY: For Loop Max Tracking -> max() builtin
+    # ──────────────────────────────────────────────────────────────────────
+    "max_builtin": {
+        "id": "max_builtin",
+        "description": "Optimize a manual tracking sequence finding the highest number in a list. Use the max() builtin.",
+        "difficulty": "easy",
+        "dirty_code": (
+            "def find_highest(numbers):\n"
+            "    if len(numbers) == 0:\n"
+            "        return None\n"
+            "    highest = numbers[0]\n"
+            "    for i in range(1, len(numbers)):\n"
+            "        if numbers[i] > highest:\n"
+            "            highest = numbers[i]\n"
+            "    return highest\n"
+        ),
+        "test_cases": [
+            {"input": "print(find_highest([10, -5, 30, 2]))", "expected_output": "30"},
+            {"input": "print(find_highest([5]))", "expected_output": "5"},
+            {"input": "print(find_highest([]))", "expected_output": "None"},
+            {"input": "print(find_highest(list(range(100000))))", "expected_output": "99999"},
+        ],
+        "expected_patterns": ["use_builtin_max"],
+    },
+
+    # ──────────────────────────────────────────────────────────────────────
+    # MEDIUM: For Loop filtering -> list comprehension
+    # ──────────────────────────────────────────────────────────────────────
+    "filter_builtin": {
+        "id": "filter_builtin",
+        "description": "Optimize a for loop that appends only even numbers to a new list. Use filter() or a list comprehension.",
+        "difficulty": "medium",
+        "dirty_code": (
+            "def get_evens(numbers):\n"
+            "    evens = []\n"
+            "    for i in range(len(numbers)):\n"
+            "        if numbers[i] % 2 == 0:\n"
+            "            evens.append(numbers[i])\n"
+            "    return evens\n"
+        ),
+        "test_cases": [
+            {"input": "print(get_evens([1, 2, 3, 4, 5]))", "expected_output": "[2, 4]"},
+            {"input": "print(get_evens([1, 3, 5]))", "expected_output": "[]"},
+            {"input": "print(get_evens([]))", "expected_output": "[]"},
+            {"input": "print(len(get_evens(list(range(50000)))))", "expected_output": "25000"},
+        ],
+        "expected_patterns": ["use_list_comprehension", "remove_index_loop"],
+    }
 }
 
 

@@ -103,6 +103,13 @@ The agent can iterate for up to **5 steps** per episode. Episodes end early if a
 | `combined_opts` | Hard | Multiple combined optimizations |
 | `fibonacci_memoization` | Hard | Use memoization for exponential recursion |
 | `loop_invariant_motion` | Hard | Move constant computation outside loops |
+| `math_simplification` | Medium | Replace loop with O(1) Gaussian formula |
+| `any_builtin` | Easy | Use `any()` builtin instead of search loop |
+| `all_builtin` | Easy | Use `all()` builtin instead of search loop |
+| `enumerate_builtin` | Easy | Use `enumerate()` instead of `range(len())` |
+| `zip_builtin` | Medium | Use `zip()` for parallel list iteration |
+| `max_builtin` | Easy | Use `max()` instead of tracking highest value |
+| `filter_builtin` | Medium | Use `filter()` or comprehension for conditional append |
 
 ---
 
@@ -164,9 +171,16 @@ generator_vs_list       medium      0.436      ✅
 combined_opts           hard        0.798      ✅
 fibonacci_memoization   hard        0.300      ✅
 loop_invariant_motion   hard        0.775      ✅
+math_simplification     medium      0.725      ✅
+any_builtin             easy        0.815      ✅
+all_builtin             easy        0.815      ✅
+enumerate_builtin       easy        0.815      ✅
+zip_builtin             medium      0.815      ✅
+max_builtin             easy        0.815      ✅
+filter_builtin          medium      0.815      ✅
 ───────────────────────────────────────────────────────
-Average Score:       0.689
-Success Rate:        100% (8/8)
+Average Score:       0.741
+Success Rate:        100% (15/15)
 ```
 
 Results are fully reproducible — the deterministic fallback agent uses rule-based optimal solutions with no randomness. Hard tasks intentionally score lower to challenge frontier models.

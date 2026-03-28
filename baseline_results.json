@@ -64,10 +64,66 @@
       "correctness": 1.0,
       "optimization": 0.6250000000000001,
       "reward": 1.0
+    },
+    "math_simplification": {
+      "task_id": "math_simplification",
+      "difficulty": "medium",
+      "final_score": 0.6625000000000001,
+      "correctness": 1.0,
+      "optimization": 0.43750000000000006,
+      "reward": 1.0
+    },
+    "any_builtin": {
+      "task_id": "any_builtin",
+      "difficulty": "easy",
+      "final_score": 0.8285714285714285,
+      "correctness": 1.0,
+      "optimization": 0.7142857142857142,
+      "reward": 1.0
+    },
+    "all_builtin": {
+      "task_id": "all_builtin",
+      "difficulty": "easy",
+      "final_score": 0.8285714285714285,
+      "correctness": 1.0,
+      "optimization": 0.7142857142857142,
+      "reward": 1.0
+    },
+    "enumerate_builtin": {
+      "task_id": "enumerate_builtin",
+      "difficulty": "easy",
+      "final_score": 0.925,
+      "correctness": 1.0,
+      "optimization": 0.8750000000000001,
+      "reward": 1.0
+    },
+    "zip_builtin": {
+      "task_id": "zip_builtin",
+      "difficulty": "medium",
+      "final_score": 0.8500000000000001,
+      "correctness": 1.0,
+      "optimization": 0.7500000000000001,
+      "reward": 1.0
+    },
+    "max_builtin": {
+      "task_id": "max_builtin",
+      "difficulty": "easy",
+      "final_score": 0.6625000000000001,
+      "correctness": 1.0,
+      "optimization": 0.43750000000000006,
+      "reward": 1.0
+    },
+    "filter_builtin": {
+      "task_id": "filter_builtin",
+      "difficulty": "medium",
+      "final_score": 0.8500000000000001,
+      "correctness": 1.0,
+      "optimization": 0.7500000000000001,
+      "reward": 1.0
     }
   },
-  "average_score": 0.6885,
+  "average_score": 0.741,
   "success_rate": 1.0,
-  "correct_count": 8,
-  "total_tasks": 8
+  "correct_count": 15,
+  "total_tasks": 15
 }
