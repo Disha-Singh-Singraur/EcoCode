@@ -13,8 +13,9 @@ from typing import Any, Dict, List, Optional
 import os
 import json
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from env.environment import EcoCodeEnv
@@ -34,6 +35,23 @@ app = FastAPI(
     description="OpenEnv-compatible environment for AI-driven code optimization",
     version="1.0.0",
 )
+
+# Allow HF Spaces iframe embedding and CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.middleware("http")
+async def add_frame_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "ALLOWALL"
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 # Global environment instance
 env = EcoCodeEnv()
