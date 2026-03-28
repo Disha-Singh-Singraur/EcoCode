@@ -112,6 +112,9 @@ class EcoCodeEnv:
             self._prev_metrics = new_metrics
         else:
             info["state_unchanged"] = True
+            if grader_result.penalty >= 0.5:
+                self._done = True
+                info["termination_reason"] = "fatal_error"
 
         # Max steps check
         if self._step_count >= MAX_STEPS:

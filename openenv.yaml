@@ -31,13 +31,7 @@ interface:
     endpoint: /step
     method: POST
     request_schema:
-      type: object
-      properties:
-        rewritten_code:
-          type: string
-          description: Agent's optimized version of the code
-      required:
-        - rewritten_code
+      $ref: "#/schemas/Action"
     response_schema:
       type: object
       properties:
@@ -49,6 +43,12 @@ interface:
           type: boolean
         info:
           type: object
+          properties:
+            grader_result:
+              $ref: "#/schemas/GraderResult"
+            termination_reason:
+              type: string
+              description: Reason why the episode terminated (e.g., fatal_error, max_steps, success)
 
   state:
     description: Get current environment state
@@ -80,6 +80,12 @@ schemas:
         enum: [easy, medium, hard]
       step_count:
         type: integer
+    required:
+      - current_code
+      - original_code
+      - test_cases
+      - difficulty
+      - step_count
 
   Action:
     type: object
@@ -92,6 +98,7 @@ schemas:
 
   Reward:
     type: object
+    description: Structured reward signal for a step
     properties:
       score:
         type: number
@@ -109,9 +116,12 @@ schemas:
             type: string
       feedback:
         type: string
+    required:
+      - score
 
   GraderResult:
     type: object
+    description: Structured grading output for a step
     properties:
       correctness_score:
         type: number
@@ -128,6 +138,17 @@ schemas:
       details:
         type: string
         description: "Human-readable grading explanation"
+      time_optimized:
+        type: number
+        description: Relative improvement in execution time
+      carbon_saved_grams:
+        type: number
+        description: Estimated carbon savings based on optimization
+    required:
+      - correctness_score
+      - optimization_score
+      - penalty
+      - final_score
 
 # Tasks
 tasks:

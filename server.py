@@ -182,57 +182,11 @@ def health():
 @app.get("/", response_class=HTMLResponse)
 def root():
     """Health check / info endpoint with visual dashboard."""
-    html_content = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>EcoCode Dashboard</title>
-        <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px auto; max-width: 800px; line-height: 1.6; color: #333; }
-            h1 { color: #2e7d32; }
-            .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-            th { background-color: #f5f5f5; }
-            .eco { color: #2e7d32; font-weight: bold; }
-        </style>
-    </head>
-    <body>
-        <h1>🌱 EcoCode Dashboard</h1>
-        <div class="card">
-            <p><strong>Status:</strong> Online</p>
-            <p>An OpenEnv-compatible interactive environment where AI agents iteratively refactor Python code to improve efficiency (Time & Memory) and reduce Carbon Footprint (gCO₂eq).</p>
-            <h3>API Endpoints:</h3>
-            <ul>
-                <li><code>POST /reset</code></li>
-                <li><code>POST /step</code></li>
-                <li><code>GET /state</code></li>
-                <li><code>GET /tasks</code></li>
-                <li><code>POST /grader</code></li>
-                <li><code>POST /baseline</code></li>
-            </ul>
-        </div>
-    """
-    
-    if os.path.exists("baseline_results.json"):
-        try:
-            with open("baseline_results.json", "r") as f:
-                data = json.load(f)
-            
-            html_content += "<h2>Latest Baseline Results</h2><table><tr><th>Task</th><th>Difficulty</th><th>Score</th><th class='eco'>Reward</th></tr>"
-            for tid, tdata in data.get("tasks", {}).items():
-                score = round(tdata.get('final_score', 0), 3)
-                reward = round(tdata.get('reward', 0), 3)
-                html_content += f"<tr><td>{tid}</td><td>{tdata.get('difficulty')}</td><td>{score}</td><td class='eco'>{reward}</td></tr>"
-            html_content += "</table>"
-            
-            avg = data.get('average_score', 0)
-            html_content += f"<p><strong>Average Score:</strong> {avg}</p>"
-        except Exception:
-            pass
-            
-    html_content += "</body></html>"
-    return HTMLResponse(content=html_content)
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>EcoCode Dashboard</h1><p>index.html not found</p>")
 
 
 if __name__ == "__main__":

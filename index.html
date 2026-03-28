@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EcoCode Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Dark mode aesthetics */
+        body { background-color: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .glass { background: rgba(22, 27, 34, 0.7); backdrop-filter: blur(10px); border: 1px solid #30363d; }
+        textarea, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        /* Hide scrollbar for aesthetics */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="p-4 lg:p-8 min-h-screen flex flex-col gap-6">
+    <!-- Top Bar -->
+    <div class="glass flex flex-wrap items-center justify-between p-4 rounded-xl shadow-lg gap-4">
+        <h1 class="text-2xl font-bold text-green-500 flex items-center gap-2">🌱 EcoCode</h1>
+        <div class="flex flex-wrap items-center gap-4">
+            <select id="task-select" class="bg-gray-800 border border-gray-600 rounded-lg p-2 text-white outline-none shadow-inner focus:ring-2 focus:ring-green-500 transition cursor-pointer">
+                <!-- Populated on load -->
+            </select>
+            <button onclick="resetEnv()" class="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white px-5 py-2 rounded-lg transition shadow">Reset Task</button>
+            <div class="text-sm font-semibold text-gray-400 bg-gray-800 px-4 py-2 rounded-lg border border-gray-700 shadow-inner">
+                Step <span id="step-count" class="text-white">0</span> / 5
+            </div>
+            <div id="status-badge" class="px-4 py-2 rounded-lg text-sm font-bold bg-blue-900/50 text-blue-300 border border-blue-700 shadow-inner">Running</div>
+        </div>
+    </div>
+
+    <!-- Termination Message -->
+    <div id="termination-banner" class="hidden p-4 rounded-xl bg-red-900/30 border border-red-500/50 text-red-300 text-center font-bold shadow-lg backdrop-blur-sm">
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-grow">
+        <!-- Original Code -->
+        <div class="glass rounded-xl flex flex-col shadow-lg overflow-hidden">
+            <div class="p-3 border-b border-gray-700 font-semibold text-gray-400 bg-gray-800/80 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                Original Code (Read-Only)
+            </div>
+            <pre id="original-code" class="p-5 overflow-auto text-sm text-gray-300 h-96 m-0 bg-gray-900/50 no-scrollbar"></pre>
+        </div>
+
+        <!-- Optimized Code -->
+        <div class="glass rounded-xl flex flex-col shadow-lg overflow-hidden border-green-900/30">
+            <div class="p-3 border-b border-gray-700 font-semibold text-green-400 bg-gray-800/80 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    Optimized Code
+                </div>
+                <button id="submit-btn" onclick="stepEnv()" class="bg-green-600 hover:bg-green-500 text-white px-5 py-1.5 rounded-lg transition font-bold text-sm shadow-lg border border-green-500/50 hover:scale-105 transform duration-150">
+                    Submit Optimization
+                </button>
+            </div>
+            <textarea id="editor" class="p-5 w-full h-96 bg-gray-900/50 text-gray-100 text-sm outline-none resize-none no-scrollbar focus:ring-inset focus:ring-1 focus:ring-green-500/50 transition" spellcheck="false"></textarea>
+        </div>
+    </div>
+
+    <!-- Bottom Section Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Test Results -->
+        <div class="glass p-5 rounded-xl shadow-lg lg:col-span-1 flex flex-col h-full max-h-96">
+            <h2 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wide flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Test Results
+            </h2>
+            <div id="test-results" class="space-y-3 overflow-y-auto no-scrollbar pr-2 flex-grow">
+                <!-- Test cases injected here -->
+            </div>
+        </div>
+
+        <!-- Right: Metrics & Graphs -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+            <!-- Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="glass p-6 rounded-xl shadow-lg flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-gray-800 to-transparent opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                    <div class="text-gray-400 text-xs font-bold mb-2 uppercase tracking-widest relative z-10">Score</div>
+                    <div id="metric-score" class="text-4xl font-extrabold text-white relative z-10 tracking-tight">-</div>
+                </div>
+                <div class="glass p-6 rounded-xl shadow-lg border-blue-900/30 flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                    <div class="text-blue-400 text-xs font-bold mb-2 uppercase tracking-widest relative z-10">Time Saved</div>
+                    <div id="metric-time" class="text-4xl font-extrabold text-blue-400 relative z-10 tracking-tight">-</div>
+                </div>
+                <div class="glass p-6 rounded-xl shadow-lg border-green-900/30 flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-green-900/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                    <div class="text-green-400 text-xs font-bold mb-2 uppercase tracking-widest relative z-10">Carbon Saved</div>
+                    <div id="metric-carbon" class="text-4xl font-extrabold text-green-400 relative z-10 tracking-tight">-</div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="glass p-5 rounded-xl shadow-lg flex-grow flex flex-col">
+                <h2 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wide flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                    Before vs After Benchmarks
+                </h2>
+                <div class="w-full flex-grow relative min-h-[200px]">
+                    <canvas id="metricsChart"></canvas>
+                    <div id="chart-overlay" class="absolute inset-0 flex items-center justify-center text-gray-500 font-semibold bg-[#0d1117]/80 backdrop-blur-sm z-10 rounded-lg border border-gray-800">
+                        Awaiting Optimization Results...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script>
+        let isDone = false;
+        let myChart = null;
+
+        const ctx = document.getElementById('metricsChart').getContext('2d');
+        Chart.defaults.color = '#8b949e';
+        Chart.defaults.borderColor = '#30363d';
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Execution Time (ms)', 'Carbon Footprint (gCO2eq x100)'],
+                datasets: [
+                    { 
+                        label: 'Before Optimization', 
+                        data: [0, 0], 
+                        backgroundColor: 'rgba(248, 81, 73, 0.8)',
+                        borderColor: 'rgba(248, 81, 73, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    { 
+                        label: 'After Optimization', 
+                        data: [0, 0], 
+                        backgroundColor: 'rgba(46, 160, 67, 0.8)',
+                        borderColor: 'rgba(46, 160, 67, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#21262d' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { 
+                    legend: { labels: { color: '#c9d1d9', font: { weight: 'bold' } } },
+                    tooltip: { backgroundColor: 'rgba(22, 27, 34, 0.9)', titleColor: '#c9d1d9', bodyColor: '#c9d1d9', borderColor: '#30363d', borderWidth: 1 }
+                }
+            }
+        });
+
+        async function loadTasks() {
+            try {
+                const res = await fetch('/tasks');
+                const tasks = await res.json();
+                const select = document.getElementById('task-select');
+                tasks.forEach(t => { select.innerHTML += `<option value="${t.id}">${t.id} (${t.difficulty})</option>` });
+                await resetEnv();
+            } catch (e) {
+                console.error("Failed to load tasks", e);
+            }
+        }
+
+        async function resetEnv() {
+            const taskId = document.getElementById('task-select').value;
+            try {
+                const res = await fetch('/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task_id: taskId })
+                });
+                const obs = await res.json();
+                updateUI(obs, false, "Running", null);
+            } catch (e) {
+                alert("Failed to reset environment.");
+            }
+        }
+
+        async function stepEnv() {
+            if (isDone) return;
+            
+            const btn = document.getElementById('submit-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "Evaluating...";
+            btn.classList.add('animate-pulse');
+            
+            const code = document.getElementById('editor').value;
+            try {
+                const res = await fetch('/step', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rewritten_code: code })
+                });
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert("Error: " + (err.detail || "Internal Server Error"));
+                } else {
+                    const data = await res.json();
+                    updateUI(data.observation, data.done, data.info.termination_reason || (data.done ? "Done" : "Running"), data.info.grader_result);
+                }
+            } catch (e) {
+                alert("Failed to submit step.");
+            } finally {
+                btn.innerText = originalText;
+                btn.classList.remove('animate-pulse');
+            }
+        }
+
+        function updateUI(obs, done, status, graderResult) {
+            isDone = done;
+            
+            // Top Bar
+            document.getElementById('step-count').innerText = obs.step_count;
+            const badge = document.getElementById('status-badge');
+            const submitBtn = document.getElementById('submit-btn');
+            const banner = document.getElementById('termination-banner');
+            
+            if (done) {
+                badge.innerText = "DONE";
+                badge.className = "px-4 py-2 rounded-lg text-sm font-bold bg-green-900/50 text-green-300 border border-green-700 shadow-inner";
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                
+                if (status && status !== "Done" && status !== "Running") {
+                    banner.innerText = `Episode terminated: ${status}`;
+                    banner.classList.remove('hidden');
+                }
+            } else {
+                badge.innerText = "RUNNING";
+                badge.className = "px-4 py-2 rounded-lg text-sm font-bold bg-blue-900/50 text-blue-300 border border-blue-700 shadow-inner";
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                banner.classList.add('hidden');
+            }
+
+            if (obs.step_count === 0) {
+                document.getElementById('original-code').innerText = obs.original_code;
+                document.getElementById('editor').value = obs.current_code;
+            }
+
+            const testDiv = document.getElementById('test-results');
+            testDiv.innerHTML = '';
+            
+            let passMap = {};
+            if (graderResult && graderResult.details) {
+                graderResult.details.split('\\n').forEach(line => {
+                     if (line.startsWith('FAIL: input=')) {
+                          let match = line.match(/FAIL: input='([^']+)'/);
+                          if(match) passMap[match[1]] = false;
+                     }
+                });
+            }
+
+            obs.test_cases.forEach((tc, i) => {
+                let passed = true;
+                if(graderResult && graderResult.correctness_score === 0.0) {
+                     if (tc.input in passMap) passed = false;
+                     else if (Object.keys(passMap).length === 0) passed = false; 
+                }
+                
+                const icon = (graderResult && !passed) ? '❌' : (graderResult ? '✅' : '⏳');
+                const bgColor = (graderResult && !passed) ? 'bg-red-900/20 border-red-800/50' : (graderResult ? 'bg-green-900/10 border-green-800/30' : 'bg-gray-800/50 border-gray-700');
+                const textColor = (graderResult && !passed) ? 'text-red-400' : (graderResult ? 'text-green-400' : 'text-gray-400');
+                
+                testDiv.innerHTML += `
+                    <div class="border rounded-lg p-3 ${bgColor} transition shadow-sm">
+                        <div class="font-bold flex justify-between text-sm ${textColor}">Test Case ${i+1} <span>${icon}</span></div>
+                        <div class="mt-2 text-xs font-mono bg-gray-900/50 p-1.5 rounded text-gray-300 truncate"><span class="text-gray-500 select-none">In:  </span>${tc.input}</div>
+                        <div class="mt-1 text-xs font-mono bg-gray-900/50 p-1.5 rounded text-gray-300 truncate"><span class="text-gray-500 select-none">Exp: </span>${tc.expected_output}</div>
+                    </div>
+                `;
+            });
+
+            if (graderResult) {
+                document.getElementById('metric-score').innerText = graderResult.final_score.toFixed(3);
+                
+                if (graderResult.time_original != null && graderResult.time_optimized != null) {
+                     let timeSaved = (graderResult.time_original - graderResult.time_optimized) * 1000;
+                     document.getElementById('metric-time').innerText = timeSaved > 0 ? timeSaved.toFixed(1) + 'ms' : '0ms';
+                } else {
+                     document.getElementById('metric-time').innerText = 'N/A';
+                }
+                
+                if (graderResult.carbon_saved_grams != null) {
+                     document.getElementById('metric-carbon').innerText = graderResult.carbon_saved_grams > 0 ? graderResult.carbon_saved_grams.toFixed(4) + 'g' : '0g';
+                } else {
+                     document.getElementById('metric-carbon').innerText = 'N/A';
+                }
+
+                if (graderResult.time_original != null) {
+                    document.getElementById('chart-overlay').classList.add('hidden');
+                    myChart.data.datasets[0].data = [
+                        graderResult.time_original * 1000, 
+                        (graderResult.carbon_original || 0) * 100 
+                    ];
+                    myChart.data.datasets[1].data = [
+                        graderResult.time_optimized * 1000, 
+                        (graderResult.carbon_optimized || 0) * 100
+                    ];
+                    myChart.update();
+                } else {
+                    document.getElementById('chart-overlay').innerText = 'Benchmark Data Unavailable';
+                    document.getElementById('chart-overlay').classList.remove('hidden');
+                }
+
+            } else {
+                document.getElementById('metric-score').innerText = '-';
+                document.getElementById('metric-time').innerText = '-';
+                document.getElementById('metric-carbon').innerText = '-';
+                document.getElementById('chart-overlay').innerText = 'Awaiting Optimization Results...';
+                document.getElementById('chart-overlay').classList.remove('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTasks);
+    </script>
+</body>
+</html>

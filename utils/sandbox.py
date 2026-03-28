@@ -192,51 +192,27 @@ def run_benchmark(
     if err:
         return BenchmarkResult()
 
-    safe_builtins = _build_safe_builtins()
-    sandbox_globals = {"__builtins__": safe_builtins}
-    
     full_code = function_code.rstrip("\n") + "\n" + test_input + "\n"
     
-    result_container = {"time": None, "memory": None}
+    import subprocess
+    import json
+    import os
 
-    def _run_bench():
-        try:
-            old_stdout = sys.stdout
-            sys.stdout = StringIO()  # Silently capture stdout
-            
-            compiled = compile(full_code, "<sandbox>", "exec")
-            
-            # --- Time Benchmark ---
-            times = []
-            for _ in range(iterations):
-                t_start = time.perf_counter()
-                exec(compiled, sandbox_globals)
-                times.append(time.perf_counter() - t_start)
-            result_container["time"] = sum(times) / len(times)
-            
-            # --- Memory Benchmark ---
-            tracemalloc.start()
-            exec(compiled, sandbox_globals)
-            _, peak = tracemalloc.get_traced_memory()
-            tracemalloc.stop()
-            result_container["memory"] = peak
-            
-            sys.stdout = old_stdout
-        except Exception:
-            try:
-                sys.stdout = old_stdout
-                tracemalloc.stop()
-            except Exception:
-                pass
+    runner_path = os.path.join(os.path.dirname(__file__), "runner.py")
+    
+    try:
+        proc = subprocess.run(
+            [sys.executable, runner_path, str(iterations), full_code],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+        if proc.returncode == 0 and proc.stdout.strip():
+            # Parse the last line in case stdout got dirtied
+            data = json.loads(proc.stdout.strip().split("\n")[-1])
+            if "error" not in data:
+                return BenchmarkResult(time_avg=data.get("time"), memory_peak=data.get("memory"))
+    except Exception:
+        pass
 
-    thread = threading.Thread(target=_run_bench, daemon=True)
-    thread.start()
-    thread.join(timeout=timeout)
-
-    if thread.is_alive():
-        return BenchmarkResult()
-
-    return BenchmarkResult(
-        time_avg=result_container["time"],
-        memory_peak=result_container["memory"]
-    )
+    return BenchmarkResult()

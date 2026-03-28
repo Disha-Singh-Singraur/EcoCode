@@ -53,8 +53,8 @@ EcoCode/
 
 ## 🧩 How It Works
 
-*Includes real performance benchmarking (execution time + memory usage) alongside deterministic AST-based evaluation.*
-*EcoCode estimates carbon savings (gCO₂eq proxy) based on execution time and memory usage to simulate environmental impact of optimizations.*
+*EcoCode uses deterministic AST-based grading as the primary signal, with optional runtime benchmarking for analysis and future extensions.*
+*Carbon estimates are derived as a proxy from execution time and memory usage to simulate environmental impact of optimizations.*
 
 EcoCode follows the **Observation → Action → Reward** loop:
 
@@ -87,7 +87,7 @@ The environment evaluates the submission and returns a reward signal:
 | Incorrect output | −1.0 |
 | Invalid / unsafe code | −0.5 |
 
-The agent can iterate for up to **5 steps** per episode. Episodes end early if a near-optimal score (≥ 0.95) is reached or no further AST improvements are detected.
+The agent can iterate for up to **5 steps** per episode. Episodes end early if a near-optimal score (≥ 0.95) is reached or no further AST improvements are detected. Episodes terminate immediately on invalid or unsafe code submissions.
 
 ---
 
