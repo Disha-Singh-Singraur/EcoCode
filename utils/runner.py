@@ -38,12 +38,16 @@ def main():
         sys.stdout = StringIO()
         
         # --- Time Benchmark ---
-        times = []
-        for _ in range(iterations):
-            t_start = time.perf_counter()
-            exec(compiled, sandbox_globals)
-            times.append(time.perf_counter() - t_start)
-        time_avg = sum(times) / len(times)
+        def measure_time(compiled_code, globals_dict):
+            import time
+            runs = 50
+            start = time.perf_counter()
+            for _ in range(runs):
+                exec(compiled_code, globals_dict)
+            end = time.perf_counter()
+            return (end - start) / runs
+            
+        time_avg = measure_time(compiled, sandbox_globals)
         
         # --- Memory Benchmark ---
         tracemalloc.start()

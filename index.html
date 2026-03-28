@@ -287,15 +287,33 @@
                 
                 if (graderResult.time_original != null && graderResult.time_optimized != null) {
                      let timeSaved = (graderResult.time_original - graderResult.time_optimized) * 1000;
-                     document.getElementById('metric-time').innerText = timeSaved > 0 ? timeSaved.toFixed(1) + 'ms' : '0ms';
+                     let mTime = document.getElementById('metric-time');
+                     if (graderResult.time_improvement_percent == 0) {
+                         mTime.innerText = 'No significant change';
+                         mTime.className = 'text-sm font-bold text-gray-500 relative z-10 pt-2 text-center mt-2';
+                     } else {
+                         mTime.innerText = timeSaved.toFixed(1) + 'ms';
+                         mTime.className = 'text-4xl font-extrabold text-blue-400 relative z-10 tracking-tight';
+                     }
                 } else {
-                     document.getElementById('metric-time').innerText = 'N/A';
+                     let mTime = document.getElementById('metric-time');
+                     mTime.innerText = 'No significant change';
+                     mTime.className = 'text-sm font-bold text-gray-500 relative z-10 pt-2 text-center mt-2';
                 }
                 
                 if (graderResult.carbon_saved_grams != null) {
-                     document.getElementById('metric-carbon').innerText = graderResult.carbon_saved_grams > 0 ? graderResult.carbon_saved_grams.toFixed(4) + 'g' : '0g';
+                     let mCarbon = document.getElementById('metric-carbon');
+                     if (graderResult.carbon_saved_percent == 0) {
+                         mCarbon.innerText = 'No significant change';
+                         mCarbon.className = 'text-sm font-bold text-gray-500 relative z-10 pt-2 text-center mt-2';
+                     } else {
+                         mCarbon.innerText = graderResult.carbon_saved_grams.toFixed(4) + 'g';
+                         mCarbon.className = 'text-4xl font-extrabold text-green-400 relative z-10 tracking-tight';
+                     }
                 } else {
-                     document.getElementById('metric-carbon').innerText = 'N/A';
+                     let mCarbon = document.getElementById('metric-carbon');
+                     mCarbon.innerText = 'No significant change';
+                     mCarbon.className = 'text-sm font-bold text-gray-500 relative z-10 pt-2 text-center mt-2';
                 }
 
                 if (graderResult.time_original != null) {

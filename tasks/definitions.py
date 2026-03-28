@@ -32,7 +32,7 @@ TASKS = {
             "    return result\n"
         ),
         "test_cases": [
-            {"input": "print(compute_sum([1, 2, 3, 4, 5]))", "expected_output": "15"},
+            {"input": "print(compute_sum(list(range(10000))))", "expected_output": "49995000"},
             {"input": "print(compute_sum([]))", "expected_output": "0"},
             {"input": "print(compute_sum([10, -5, 3]))", "expected_output": "8"},
             {"input": "print(compute_sum([100]))", "expected_output": "100"},
@@ -65,8 +65,8 @@ TASKS = {
         ),
         "test_cases": [
             {
-                "input": "print(sorted(find_common([1, 2, 3, 4], [3, 4, 5, 6])))",
-                "expected_output": "[3, 4]",
+                "input": "print(len(find_common(list(range(2000)), list(range(1000, 3000)))))",
+                "expected_output": "1000",
             },
             {
                 "input": "print(sorted(find_common([], [1, 2, 3])))",
@@ -114,8 +114,8 @@ TASKS = {
         ),
         "test_cases": [
             {
-                "input": "print(format_words(['hello', 'world', 'python']))",
-                "expected_output": "Hello, World, Python",
+                "input": "print(len(format_words(['a'] * 5000)))",
+                "expected_output": "14998",
             },
             {
                 "input": "print(format_words(['TEST']))",
@@ -318,7 +318,7 @@ TASKS = {
             "    return fibonacci(n - 1) + fibonacci(n - 2)\n"
         ),
         "test_cases": [
-            {"input": "print(fibonacci(5))", "expected_output": "5"},
+            {"input": "print(fibonacci(30))", "expected_output": "832040"},
             {"input": "print(fibonacci(10))", "expected_output": "55"},
             {"input": "print(fibonacci(0))", "expected_output": "0"},
             {"input": "print(fibonacci(1))", "expected_output": "1"},

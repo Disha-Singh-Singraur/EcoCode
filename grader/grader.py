@@ -115,20 +115,32 @@ class Grader:
         if test_cases and final_score >= 0.0:  # Only benchmark if no fatal error
             tc_input = test_cases[0]["input"]  # Use first test case for benchmark
             try:
-                bench_orig = run_benchmark(original_code, tc_input)
-                bench_opt = run_benchmark(rewritten_code, tc_input)
+                if original_code.strip() == rewritten_code.strip():
+                    bench_orig = run_benchmark(original_code, tc_input)
+                    bench_opt = bench_orig
+                else:
+                    bench_orig = run_benchmark(original_code, tc_input)
+                    bench_opt = run_benchmark(rewritten_code, tc_input)
                 
                 if bench_orig.time_avg is not None and bench_opt.time_avg is not None:
                     time_orig = bench_orig.time_avg
                     time_opt = bench_opt.time_avg
                     if time_orig > 0:
-                        time_percent = max(0.0, (time_orig - time_opt) / time_orig * 100.0)
+                        improvement = (time_orig - time_opt) / time_orig
+                        threshold = 0.10  # 10% tolerance to absorb OS variance  # 2% tolerance
+                        if abs(improvement) < threshold:
+                            improvement = 0.0
+                        time_percent = improvement * 100.0
                         
                 if bench_orig.memory_peak is not None and bench_opt.memory_peak is not None:
                     mem_orig = bench_orig.memory_peak / 1048576.0  # MB
                     mem_opt = bench_opt.memory_peak / 1048576.0  # MB
                     if mem_orig > 0:
-                        mem_percent = max(0.0, (mem_orig - mem_opt) / mem_orig * 100.0)
+                        mem_improvement = (mem_orig - mem_opt) / mem_orig
+                        threshold = 0.10  # 10% tolerance to absorb OS variance
+                        if abs(mem_improvement) < threshold:
+                            mem_improvement = 0.0
+                        mem_percent = mem_improvement * 100.0
 
                 # Carbon Calculation
                 if time_orig is not None and mem_orig is not None:
@@ -138,7 +150,11 @@ class Grader:
                     carbon_opt = (time_opt * POWER_USAGE_CONSTANT) + (mem_opt * MEMORY_POWER_CONSTANT)
                     carbon_grams = carbon_orig - carbon_opt
                     if carbon_orig > 0:
-                        carbon_percent = max(0.0, (carbon_grams / carbon_orig) * 100.0)
+                        carbon_improvement = carbon_grams / carbon_orig
+                        threshold = 0.10  # 10% tolerance to absorb OS variance
+                        if abs(carbon_improvement) < threshold:
+                            carbon_improvement = 0.0
+                        carbon_percent = carbon_improvement * 100.0
             except Exception:
                 pass  # Silently skip benchmarking if it fails
 
