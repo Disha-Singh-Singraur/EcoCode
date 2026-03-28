@@ -181,137 +181,58 @@ def health():
 
 @app.get("/", response_class=HTMLResponse)
 def root():
-    """Premium EcoCode dashboard."""
-    return HTMLResponse(content="""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EcoCode — Green Code Optimization</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 30%,#ecfdf5 60%,#f0f9ff 100%);min-height:100vh;color:#1e293b}
-.container{max-width:960px;margin:0 auto;padding:40px 24px}
-
-/* Hero */
-.hero{text-align:center;margin-bottom:48px;animation:fadeUp .6s ease-out}
-.hero-icon{font-size:64px;margin-bottom:12px}
-.hero h1{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,#166534,#15803d,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
-.hero p{font-size:1.1rem;color:#475569;max-width:600px;margin:0 auto;line-height:1.7}
-.badge{display:inline-block;background:#dcfce7;color:#166534;padding:4px 14px;border-radius:20px;font-size:.8rem;font-weight:600;margin-top:12px;border:1px solid #bbf7d0}
-
-/* Stats row */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:36px;animation:fadeUp .8s ease-out}
-.stat-card{background:rgba(255,255,255,.75);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.8);border-radius:16px;padding:24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.04);transition:transform .2s,box-shadow .2s}
-.stat-card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,.08)}
-.stat-num{font-size:2rem;font-weight:800;color:#166534}
-.stat-label{font-size:.85rem;color:#64748b;margin-top:4px;font-weight:500}
-
-/* Cards */
-.card{background:rgba(255,255,255,.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.8);border-radius:16px;padding:28px;margin-bottom:24px;box-shadow:0 4px 20px rgba(0,0,0,.04);animation:fadeUp 1s ease-out}
-.card h2{font-size:1.3rem;font-weight:700;color:#166534;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-
-/* Table */
-table{width:100%;border-collapse:separate;border-spacing:0}
-th{background:#f0fdf4;color:#166534;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;padding:12px 16px;text-align:left}
-th:first-child{border-radius:10px 0 0 10px}
-th:last-child{border-radius:0 10px 10px 0}
-td{padding:12px 16px;border-bottom:1px solid #f1f5f9;font-size:.9rem}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:#f0fdf4}
-.diff-easy{color:#059669;font-weight:600}
-.diff-medium{color:#d97706;font-weight:600}
-.diff-hard{color:#dc2626;font-weight:600}
-
-/* Endpoints */
-.endpoints{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.ep{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;transition:all .2s}
-.ep:hover{background:#f0fdf4;border-color:#bbf7d0;transform:translateX(4px)}
-.ep-method{font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:6px;min-width:44px;text-align:center}
-.ep-get{background:#dcfce7;color:#166534}
-.ep-post{background:#dbeafe;color:#1e40af}
-.ep-path{font-family:'SF Mono',Monaco,monospace;font-size:.85rem;color:#334155}
-
-/* Footer */
-.footer{text-align:center;margin-top:40px;color:#94a3b8;font-size:.8rem}
-.footer a{color:#166534;text-decoration:none}
-
-/* Loading */
-#tasks-loading{text-align:center;padding:20px;color:#94a3b8}
-.spinner{display:inline-block;width:20px;height:20px;border:2px solid #e2e8f0;border-top-color:#166534;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:640px){.stats{grid-template-columns:1fr}.endpoints{grid-template-columns:1fr}.hero h1{font-size:1.8rem}}
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="hero">
-    <div class="hero-icon">🌱</div>
-    <h1>EcoCode</h1>
-    <p>An OpenEnv-compatible environment where AI agents iteratively refactor Python code to improve efficiency and reduce carbon footprint.</p>
-    <span class="badge">✅ Online — OpenEnv v1.0</span>
-  </div>
-
-  <div class="stats">
-    <div class="stat-card"><div class="stat-num" id="task-count">—</div><div class="stat-label">Optimization Tasks</div></div>
-    <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">Difficulty Levels</div></div>
-    <div class="stat-card"><div class="stat-num" id="carbon-stat">🌱</div><div class="stat-label">CO₂ Tracking</div></div>
-  </div>
-
-  <div class="card">
-    <h2>📋 Available Tasks</h2>
-    <div id="tasks-loading"><span class="spinner"></span>Loading tasks...</div>
-    <table id="tasks-table" style="display:none">
-      <thead><tr><th>Task</th><th>Difficulty</th><th>Description</th></tr></thead>
-      <tbody id="tasks-body"></tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <h2>🔌 API Endpoints</h2>
-    <div class="endpoints">
-      <div class="ep"><span class="ep-method ep-post">POST</span><span class="ep-path">/reset</span></div>
-      <div class="ep"><span class="ep-method ep-post">POST</span><span class="ep-path">/step</span></div>
-      <div class="ep"><span class="ep-method ep-get">GET</span><span class="ep-path">/state</span></div>
-      <div class="ep"><span class="ep-method ep-get">GET</span><span class="ep-path">/tasks</span></div>
-      <div class="ep"><span class="ep-method ep-post">POST</span><span class="ep-path">/grader</span></div>
-      <div class="ep"><span class="ep-method ep-post">POST</span><span class="ep-path">/baseline</span></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>🌍 How It Works</h2>
-    <p style="color:#475569;line-height:1.8;font-size:.95rem">
-      <strong>1.</strong> Agent receives inefficient Python code via <code>/reset</code><br>
-      <strong>2.</strong> Agent submits optimized code via <code>/step</code><br>
-      <strong>3.</strong> Environment grades correctness + optimization + carbon savings<br>
-      <strong>4.</strong> Agent iterates using feedback until optimal score is reached
-    </p>
-  </div>
-
-  <div class="footer">
-    <p>Built for the <strong>Meta OpenEnv Hackathon</strong> · <a href="/docs">API Docs ↗</a></p>
-  </div>
-</div>
-
-<script>
-fetch('/tasks').then(r=>r.json()).then(tasks=>{
-  document.getElementById('task-count').textContent=tasks.length;
-  const tbody=document.getElementById('tasks-body');
-  tasks.forEach(t=>{
-    const dc=t.difficulty==='easy'?'diff-easy':t.difficulty==='medium'?'diff-medium':'diff-hard';
-    const cap=t.difficulty.charAt(0).toUpperCase()+t.difficulty.slice(1);
-    tbody.innerHTML+=`<tr><td style="font-weight:600">${t.id}</td><td><span class="${dc}">${cap}</span></td><td style="color:#64748b;font-size:.85rem">${t.description.substring(0,80)}...</td></tr>`;
-  });
-  document.getElementById('tasks-loading').style.display='none';
-  document.getElementById('tasks-table').style.display='table';
-}).catch(()=>{document.getElementById('tasks-loading').textContent='Could not load tasks';});
-</script>
-</body>
-</html>""")
+    """Health check / info endpoint with visual dashboard."""
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>EcoCode Dashboard</title>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px auto; max-width: 800px; line-height: 1.6; color: #333; }
+            h1 { color: #2e7d32; }
+            .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background-color: #f5f5f5; }
+            .eco { color: #2e7d32; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <h1>🌱 EcoCode Dashboard</h1>
+        <div class="card">
+            <p><strong>Status:</strong> Online</p>
+            <p>An OpenEnv-compatible interactive environment where AI agents iteratively refactor Python code to improve efficiency (Time & Memory) and reduce Carbon Footprint (gCO₂eq).</p>
+            <h3>API Endpoints:</h3>
+            <ul>
+                <li><code>POST /reset</code></li>
+                <li><code>POST /step</code></li>
+                <li><code>GET /state</code></li>
+                <li><code>GET /tasks</code></li>
+                <li><code>POST /grader</code></li>
+                <li><code>POST /baseline</code></li>
+            </ul>
+        </div>
+    """
+    
+    if os.path.exists("baseline_results.json"):
+        try:
+            with open("baseline_results.json", "r") as f:
+                data = json.load(f)
+            
+            html_content += "<h2>Latest Baseline Results</h2><table><tr><th>Task</th><th>Difficulty</th><th>Score</th><th class='eco'>Reward</th></tr>"
+            for tid, tdata in data.get("tasks", {}).items():
+                score = round(tdata.get('final_score', 0), 3)
+                reward = round(tdata.get('reward', 0), 3)
+                html_content += f"<tr><td>{tid}</td><td>{tdata.get('difficulty')}</td><td>{score}</td><td class='eco'>{reward}</td></tr>"
+            html_content += "</table>"
+            
+            avg = data.get('average_score', 0)
+            html_content += f"<p><strong>Average Score:</strong> {avg}</p>"
+        except Exception:
+            pass
+            
+    html_content += "</body></html>"
+    return HTMLResponse(content=html_content)
 
 
 if __name__ == "__main__":
