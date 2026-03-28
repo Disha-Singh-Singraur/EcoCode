@@ -140,9 +140,21 @@ tasks:
   - id: string_builder
     difficulty: medium
     description: Optimize string concatenation using str.join()
+  - id: dictionary_frequency
+    difficulty: medium
+    description: Replace nested-loop frequency counting with dictionary
+  - id: generator_vs_list
+    difficulty: medium
+    description: Use generator expression instead of list comprehension
   - id: combined_opts
     difficulty: hard
     description: Apply multiple combined optimizations
+  - id: fibonacci_memoization
+    difficulty: hard
+    description: Use memoization for exponential recursive Fibonacci
+  - id: loop_invariant_motion
+    difficulty: hard
+    description: Move constant computation outside loops
 
 # Deployment
 deployment:

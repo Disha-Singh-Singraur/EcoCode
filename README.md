@@ -154,18 +154,22 @@ Deterministic grader returning structured `GraderResult`:
 ## 📊 Baseline Results (Deterministic Agent)
 
 ```
-Task                 Difficulty  Score      Correct
-──────────────────────────────────────────────────
-loop_sum             easy        0.812      ✅
-nested_search        medium      0.812      ✅
-string_builder       medium      0.757      ✅
-combined_opts        hard        0.798      ✅
-──────────────────────────────────────────────────
-Average Score:       0.795
-Success Rate:        100% (4/4)
+Task                    Difficulty  Score      Correct
+───────────────────────────────────────────────────────
+loop_sum                easy        0.813      ✅
+nested_search           medium      0.813      ✅
+string_builder          medium      0.757      ✅
+dictionary_frequency    medium      0.818      ✅
+generator_vs_list       medium      0.436      ✅
+combined_opts           hard        0.798      ✅
+fibonacci_memoization   hard        0.300      ✅
+loop_invariant_motion   hard        0.775      ✅
+───────────────────────────────────────────────────────
+Average Score:       0.689
+Success Rate:        100% (8/8)
 ```
 
-Results are fully reproducible — the deterministic fallback agent uses rule-based optimal solutions with no randomness.
+Results are fully reproducible — the deterministic fallback agent uses rule-based optimal solutions with no randomness. Hard tasks intentionally score lower to challenge frontier models.
 
 ---
 
