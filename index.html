@@ -91,22 +91,44 @@
                 </div>
                 <div class="glass p-6 rounded-xl shadow-lg border-green-900/30 flex flex-col items-center justify-center relative overflow-hidden group">
                     <div class="absolute inset-0 bg-gradient-to-br from-green-900/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                    <div class="text-green-400 text-xs font-bold mb-2 uppercase tracking-widest relative z-10">Carbon Saved</div>
+                    <div class="text-green-400 text-xs font-bold mb-1 uppercase tracking-widest relative z-10">Carbon Saved</div>
                     <div id="metric-carbon" class="text-4xl font-extrabold text-green-400 relative z-10 tracking-tight">-</div>
+                    <div id="metric-carbon-percent" class="text-xs font-bold text-green-500/80 mt-1 relative z-10 hidden"></div>
+                    <div id="metric-carbon-scaled" class="text-[10px] text-gray-500 mt-2 relative z-10 hidden text-center italic"></div>
                 </div>
             </div>
 
-            <!-- Chart -->
-            <div class="glass p-5 rounded-xl shadow-lg flex-grow flex flex-col">
-                <h2 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wide flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
-                    Before vs After Benchmarks
-                </h2>
-                <div class="w-full flex-grow relative min-h-[200px]">
-                    <canvas id="metricsChart"></canvas>
-                    <div id="chart-overlay" class="absolute inset-0 flex items-center justify-center text-gray-500 font-semibold bg-[#0d1117]/80 backdrop-blur-sm z-10 rounded-lg border border-gray-800">
-                        Awaiting Optimization Results...
+            <div class="glass p-5 rounded-xl shadow-lg flex-grow flex flex-col min-h-[320px] relative">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
+                    <!-- Time Chart -->
+                    <div class="flex flex-col h-full">
+                        <h3 class="text-[10px] font-bold text-gray-500 mb-3 uppercase tracking-widest flex items-center gap-2">
+                            <svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Execution Time (ms)
+                        </h3>
+                        <div class="flex-grow min-h-[180px]">
+                            <canvas id="timeChart"></canvas>
+                        </div>
                     </div>
+                    <!-- Carbon Chart -->
+                    <div class="flex flex-col h-full">
+                        <h3 class="text-[10px] font-bold text-gray-500 mb-3 uppercase tracking-widest flex items-center gap-2">
+                            <svg class="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            Carbon Footprint
+                        </h3>
+                        <div class="flex-grow min-h-[180px]">
+                            <canvas id="carbonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Overlay remains relative to the container -->
+                <div id="chart-overlay" class="absolute inset-0 flex items-center justify-center text-gray-500 font-semibold bg-[#0d1117]/80 backdrop-blur-sm z-10 rounded-lg border border-gray-800">
+                    Awaiting Optimization Results...
+                </div>
+                
+                <div class="mt-4 text-[9px] text-gray-500 text-center uppercase tracking-widest opacity-50">
+                    Metrics derived from execution benchmarks and memory tracking.
                 </div>
             </div>
         </div>
@@ -115,48 +137,65 @@
     <!-- Logic -->
     <script>
         let isDone = false;
-        let myChart = null;
+        let timeChart = null;
+        let carbonChart = null;
 
-        const ctx = document.getElementById('metricsChart').getContext('2d');
+        function formatCarbon(grams) {
+            if (grams === 0) return "0 g";
+            const absGrams = Math.abs(grams);
+            if (absGrams >= 1) return grams.toFixed(3) + " g";
+            if (absGrams >= 0.001) return (grams * 1000).toFixed(2) + " mg";
+            return (grams * 1000000).toFixed(1) + " μg";
+        }
+
         Chart.defaults.color = '#8b949e';
         Chart.defaults.borderColor = '#30363d';
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        
-        myChart = new Chart(ctx, {
+
+        const chartOptions = (title, unitFormatter) => ({
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 8, usePointStyle: true, color: '#8b949e', font: { size: 10 } } },
+                tooltip: {
+                    backgroundColor: 'rgba(22, 27, 34, 0.95)',
+                    titleColor: '#c9d1d9',
+                    bodyColor: '#c9d1d9',
+                    borderColor: '#30363d',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: (ctx) => `${ctx.dataset.label}: ${unitFormatter(ctx.parsed.y)}`
+                    }
+                }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#21262d' }, ticks: { font: { size: 9 }, callback: (val) => unitFormatter(val) } },
+                x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' } } }
+            }
+        });
+
+        timeChart = new Chart(document.getElementById('timeChart'), {
             type: 'bar',
             data: {
-                labels: ['Execution Time (ms)', 'Carbon Footprint (gCO2eq x100)'],
+                labels: ['Execution Time'],
                 datasets: [
-                    { 
-                        label: 'Before Optimization', 
-                        data: [0, 0], 
-                        backgroundColor: 'rgba(248, 81, 73, 0.8)',
-                        borderColor: 'rgba(248, 81, 73, 1)',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    },
-                    { 
-                        label: 'After Optimization', 
-                        data: [0, 0], 
-                        backgroundColor: 'rgba(46, 160, 67, 0.8)',
-                        borderColor: 'rgba(46, 160, 67, 1)',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }
+                    { label: 'Before', data: [0], backgroundColor: 'rgba(248, 81, 73, 0.6)', borderColor: 'rgba(248, 81, 73, 1)', borderWidth: 1, borderRadius: 4 },
+                    { label: 'After', data: [0], backgroundColor: 'rgba(46, 160, 67, 0.6)', borderColor: 'rgba(46, 160, 67, 1)', borderWidth: 1, borderRadius: 4 }
                 ]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#21262d' } },
-                    x: { grid: { display: false } }
-                },
-                plugins: { 
-                    legend: { labels: { color: '#c9d1d9', font: { weight: 'bold' } } },
-                    tooltip: { backgroundColor: 'rgba(22, 27, 34, 0.9)', titleColor: '#c9d1d9', bodyColor: '#c9d1d9', borderColor: '#30363d', borderWidth: 1 }
-                }
-            }
+            options: chartOptions('Time', (val) => val.toFixed(1) + 'ms')
+        });
+
+        carbonChart = new Chart(document.getElementById('carbonChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Carbon Footprint'],
+                datasets: [
+                    { label: 'Before', data: [0], backgroundColor: 'rgba(248, 81, 73, 0.6)', borderColor: 'rgba(248, 81, 73, 1)', borderWidth: 1, borderRadius: 4 },
+                    { label: 'After', data: [0], backgroundColor: 'rgba(46, 160, 67, 0.6)', borderColor: 'rgba(46, 160, 67, 1)', borderWidth: 1, borderRadius: 4 }
+                ]
+            },
+            options: chartOptions('Carbon', (val) => formatCarbon(val))
         });
 
         async function loadTasks() {
@@ -303,30 +342,45 @@
                 
                 if (graderResult.carbon_saved_grams != null) {
                      let mCarbon = document.getElementById('metric-carbon');
+                     let mPercent = document.getElementById('metric-carbon-percent');
+                     let mScaled = document.getElementById('metric-carbon-scaled');
+                     
                      if (graderResult.carbon_saved_percent == 0) {
-                         mCarbon.innerText = 'No significant change';
+                         mCarbon.innerText = 'No Change';
                          mCarbon.className = 'text-sm font-bold text-gray-500 relative z-10 pt-2 text-center mt-2';
+                         mPercent.classList.add('hidden');
+                         mScaled.classList.add('hidden');
                      } else {
-                         mCarbon.innerText = graderResult.carbon_saved_grams.toFixed(4) + 'g';
+                         mCarbon.innerText = formatCarbon(graderResult.carbon_saved_grams);
                          mCarbon.className = 'text-4xl font-extrabold text-green-400 relative z-10 tracking-tight';
+                         
+                         const isReduction = (graderResult.carbon_saved_percent || 0) >= 0;
+                         const arrow = isReduction ? '↓' : '↑';
+                         mPercent.innerText = `${arrow} ${Math.abs(graderResult.carbon_saved_percent || 0).toFixed(1)}% ${isReduction ? 'reduction' : 'increase'}`;
+                         mPercent.className = `text-xs font-bold ${isReduction ? 'text-green-500/80' : 'text-red-500/80'} mt-1 relative z-10`;
+                         mPercent.classList.remove('hidden');
+                         
+                         let scaled = graderResult.carbon_saved_grams * 1000000;
+                         mScaled.innerText = `Estimate: If executed 1M times, saves ${scaled.toFixed(1)}g of CO2`;
+                         mScaled.classList.remove('hidden');
                      }
                 } else {
                      let mCarbon = document.getElementById('metric-carbon');
-                     mCarbon.innerText = 'No significant change';
-                     mCarbon.className = 'text-sm font-bold text-gray-500 relative z-10 pt-2 text-center mt-2';
+                     mCarbon.innerText = '-';
+                     document.getElementById('metric-carbon-percent').classList.add('hidden');
+                     document.getElementById('metric-carbon-scaled').classList.add('hidden');
                 }
 
                 if (graderResult.time_original != null) {
                     document.getElementById('chart-overlay').classList.add('hidden');
-                    myChart.data.datasets[0].data = [
-                        graderResult.time_original * 1000, 
-                        (graderResult.carbon_original || 0) * 100 
-                    ];
-                    myChart.data.datasets[1].data = [
-                        graderResult.time_optimized * 1000, 
-                        (graderResult.carbon_optimized || 0) * 100
-                    ];
-                    myChart.update();
+                    
+                    timeChart.data.datasets[0].data = [graderResult.time_original * 1000];
+                    timeChart.data.datasets[1].data = [graderResult.time_optimized * 1000];
+                    timeChart.update();
+
+                    carbonChart.data.datasets[0].data = [graderResult.carbon_original || 0];
+                    carbonChart.data.datasets[1].data = [graderResult.carbon_optimized || 0];
+                    carbonChart.update();
                 } else {
                     document.getElementById('chart-overlay').innerText = 'Benchmark Data Unavailable';
                     document.getElementById('chart-overlay').classList.remove('hidden');
