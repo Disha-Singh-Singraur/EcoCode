@@ -182,21 +182,21 @@ tasks:
   - id: any_builtin
     difficulty: easy
     description: Use any() builtin instead of search loop
-  - id: all_builtin
-    difficulty: easy
-    description: Use all() builtin instead of search loop
+  - id: matrix_transpose
+    difficulty: hard
+    description: Optimize nested-loop matrix transpose using zip(*matrix)
   - id: enumerate_builtin
     difficulty: easy
     description: Use enumerate() instead of range(len())
   - id: zip_builtin
     difficulty: medium
     description: Use zip() for parallel list iteration
-  - id: max_builtin
-    difficulty: easy
-    description: Use max() instead of tracking highest value
-  - id: filter_builtin
-    difficulty: medium
-    description: Use filter() or comprehension for conditional append
+  - id: sorted_word_count
+    difficulty: hard
+    description: Multi-stage word frequency pipeline with sorting and formatting
+  - id: deep_flatten
+    difficulty: hard
+    description: Optimize recursive list flattening to avoid O(n²) copies
 
 # Deployment
 deployment:

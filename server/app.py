@@ -189,6 +189,10 @@ def root():
         return HTMLResponse(content="<h1>EcoCode Dashboard</h1><p>index.html not found</p>")
 
 
-if __name__ == "__main__":
+def main():
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=7860)
+
+
+if __name__ == "__main__":
+    main()

@@ -416,28 +416,37 @@ TASKS = {
     },
 
     # ──────────────────────────────────────────────────────────────────────
-    # EASY: For Loop Search -> all() builtin
+    # HARD: Nested loop matrix transpose → zip(*matrix)
     # ──────────────────────────────────────────────────────────────────────
-    "all_builtin": {
-        "id": "all_builtin",
-        "description": "Optimize a loop that checks if all elements in a list meet a condition. Use the all() builtin.",
-        "difficulty": "easy",
+    "matrix_transpose": {
+        "id": "matrix_transpose",
+        "description": (
+            "Optimize a function that transposes a 2D matrix using deeply nested "
+            "loops with manual index tracking. Replace with Pythonic zip-based "
+            "approach. Watch out: the matrix may not be square."
+        ),
+        "difficulty": "hard",
         "dirty_code": (
-            "def is_all_positive(numbers):\n"
-            "    result = True\n"
-            "    for i in range(len(numbers)):\n"
-            "        if numbers[i] <= 0:\n"
-            "            result = False\n"
-            "            break\n"
+            "def transpose(matrix):\n"
+            "    if len(matrix) == 0:\n"
+            "        return []\n"
+            "    rows = len(matrix)\n"
+            "    cols = len(matrix[0])\n"
+            "    result = []\n"
+            "    for j in range(cols):\n"
+            "        new_row = []\n"
+            "        for i in range(rows):\n"
+            "            new_row.append(matrix[i][j])\n"
+            "        result.append(new_row)\n"
             "    return result\n"
         ),
         "test_cases": [
-            {"input": "print(is_all_positive([1, 2, 3, 4]))", "expected_output": "True"},
-            {"input": "print(is_all_positive([10, -5, 3]))", "expected_output": "False"},
-            {"input": "print(is_all_positive([]))", "expected_output": "True"},
-            {"input": "print(is_all_positive(list(range(1, 100000))))", "expected_output": "True"},
+            {"input": "print(transpose([[1,2,3],[4,5,6]]))", "expected_output": "[[1, 4], [2, 5], [3, 6]]"},
+            {"input": "print(transpose([]))", "expected_output": "[]"},
+            {"input": "print(transpose([[1]]))", "expected_output": "[[1]]"},
+            {"input": "print(transpose([[1,2],[3,4],[5,6]]))", "expected_output": "[[1, 3, 5], [2, 4, 6]]"},
         ],
-        "expected_patterns": ["use_builtin_all", "remove_index_loop"],
+        "expected_patterns": ["use_builtin_zip", "remove_nested_loops", "remove_index_loop"],
     },
 
     # ──────────────────────────────────────────────────────────────────────
@@ -488,53 +497,110 @@ TASKS = {
     },
 
     # ──────────────────────────────────────────────────────────────────────
-    # EASY: For Loop Max Tracking -> max() builtin
+    # HARD: Multi-stage word frequency pipeline
     # ──────────────────────────────────────────────────────────────────────
-    "max_builtin": {
-        "id": "max_builtin",
-        "description": "Optimize a manual tracking sequence finding the highest number in a list. Use the max() builtin.",
-        "difficulty": "easy",
+    "sorted_word_count": {
+        "id": "sorted_word_count",
+        "description": (
+            "Optimize a function that counts word frequencies in a text, sorts "
+            "by frequency (descending) then alphabetically, and formats output. "
+            "Uses multiple inefficient passes with nested loops. Replace with "
+            "dict counting, sorted() with key function, and str.join()."
+        ),
+        "difficulty": "hard",
         "dirty_code": (
-            "def find_highest(numbers):\n"
-            "    if len(numbers) == 0:\n"
-            "        return None\n"
-            "    highest = numbers[0]\n"
-            "    for i in range(1, len(numbers)):\n"
-            "        if numbers[i] > highest:\n"
-            "            highest = numbers[i]\n"
-            "    return highest\n"
+            "def word_frequency_report(text):\n"
+            "    words = []\n"
+            "    current = ''\n"
+            "    for i in range(len(text)):\n"
+            "        if text[i] == ' ':\n"
+            "            if current != '':\n"
+            "                words.append(current.lower())\n"
+            "                current = ''\n"
+            "        else:\n"
+            "            current = current + text[i]\n"
+            "    if current != '':\n"
+            "        words.append(current.lower())\n"
+            "    unique = []\n"
+            "    counts = []\n"
+            "    for i in range(len(words)):\n"
+            "        found = False\n"
+            "        for j in range(len(unique)):\n"
+            "            if words[i] == unique[j]:\n"
+            "                counts[j] = counts[j] + 1\n"
+            "                found = True\n"
+            "        if found == False:\n"
+            "            unique.append(words[i])\n"
+            "            counts.append(1)\n"
+            "    for i in range(len(unique)):\n"
+            "        for j in range(i + 1, len(unique)):\n"
+            "            if counts[i] < counts[j] or (counts[i] == counts[j] and unique[i] > unique[j]):\n"
+            "                tmp_w = unique[i]\n"
+            "                unique[i] = unique[j]\n"
+            "                unique[j] = tmp_w\n"
+            "                tmp_c = counts[i]\n"
+            "                counts[i] = counts[j]\n"
+            "                counts[j] = tmp_c\n"
+            "    result = ''\n"
+            "    for i in range(len(unique)):\n"
+            "        result = result + unique[i] + ':' + str(counts[i])\n"
+            "        if i < len(unique) - 1:\n"
+            "            result = result + ' '\n"
+            "    return result\n"
         ),
         "test_cases": [
-            {"input": "print(find_highest([10, -5, 30, 2]))", "expected_output": "30"},
-            {"input": "print(find_highest([5]))", "expected_output": "5"},
-            {"input": "print(find_highest([]))", "expected_output": "None"},
-            {"input": "print(find_highest(list(range(100000))))", "expected_output": "99999"},
+            {
+                "input": "print(word_frequency_report('the cat sat on the mat the cat'))",
+                "expected_output": "the:3 cat:2 mat:1 on:1 sat:1",
+            },
+            {"input": "print(word_frequency_report(''))", "expected_output": ""},
+            {"input": "print(word_frequency_report('hello'))", "expected_output": "hello:1"},
+            {
+                "input": "print(word_frequency_report('a b a b c'))",
+                "expected_output": "a:2 b:2 c:1",
+            },
         ],
-        "expected_patterns": ["use_builtin_max"],
+        "expected_patterns": [
+            "use_dict_counting",
+            "use_builtin_sorted",
+            "use_str_join",
+            "remove_nested_loops",
+            "remove_redundant_vars",
+            "use_str_methods",
+        ],
     },
 
     # ──────────────────────────────────────────────────────────────────────
-    # MEDIUM: For Loop filtering -> list comprehension
+    # HARD: Recursive flatten with O(n²) list copies → extend()
     # ──────────────────────────────────────────────────────────────────────
-    "filter_builtin": {
-        "id": "filter_builtin",
-        "description": "Optimize a for loop that appends only even numbers to a new list. Use filter() or a list comprehension.",
-        "difficulty": "medium",
+    "deep_flatten": {
+        "id": "deep_flatten",
+        "description": (
+            "Optimize a function that flattens arbitrarily nested lists using "
+            "inefficient recursive concatenation (creates new lists at every level). "
+            "Use a generator-based or iterative approach with extend() to avoid "
+            "O(n²) list copies."
+        ),
+        "difficulty": "hard",
         "dirty_code": (
-            "def get_evens(numbers):\n"
-            "    evens = []\n"
-            "    for i in range(len(numbers)):\n"
-            "        if numbers[i] % 2 == 0:\n"
-            "            evens.append(numbers[i])\n"
-            "    return evens\n"
+            "def flatten(data):\n"
+            "    result = []\n"
+            "    for i in range(len(data)):\n"
+            "        if type(data[i]) == list:\n"
+            "            inner = flatten(data[i])\n"
+            "            for j in range(len(inner)):\n"
+            "                result.append(inner[j])\n"
+            "        else:\n"
+            "            result.append(data[i])\n"
+            "    return result\n"
         ),
         "test_cases": [
-            {"input": "print(get_evens([1, 2, 3, 4, 5]))", "expected_output": "[2, 4]"},
-            {"input": "print(get_evens([1, 3, 5]))", "expected_output": "[]"},
-            {"input": "print(get_evens([]))", "expected_output": "[]"},
-            {"input": "print(len(get_evens(list(range(50000)))))", "expected_output": "25000"},
+            {"input": "print(flatten([1, [2, [3, 4]], [5, [6]]]))", "expected_output": "[1, 2, 3, 4, 5, 6]"},
+            {"input": "print(flatten([]))", "expected_output": "[]"},
+            {"input": "print(flatten([1, 2, 3]))", "expected_output": "[1, 2, 3]"},
+            {"input": "print(flatten([[[[1]]]]))", "expected_output": "[1]"},
         ],
-        "expected_patterns": ["use_list_comprehension", "remove_index_loop"],
+        "expected_patterns": ["remove_index_loop", "remove_redundant_vars"],
     }
 }
 

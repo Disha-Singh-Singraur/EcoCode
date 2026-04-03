@@ -81,9 +81,11 @@ FALLBACK_SOLUTIONS = {
         "def contains_positive(numbers):\n"
         "    return any(n > 0 for n in numbers)\n"
     ),
-    "all_builtin": (
-        "def is_all_positive(numbers):\n"
-        "    return all(n > 0 for n in numbers)\n"
+    "matrix_transpose": (
+        "def transpose(matrix):\n"
+        "    if not matrix:\n"
+        "        return []\n"
+        "    return [list(row) for row in zip(*matrix)]\n"
     ),
     "enumerate_builtin": (
         "def format_indexed(items):\n"
@@ -93,15 +95,25 @@ FALLBACK_SOLUTIONS = {
         "def combine_lists(list_a, list_b):\n"
         "    return [a + b for a, b in zip(list_a, list_b)]\n"
     ),
-    "max_builtin": (
-        "def find_highest(numbers):\n"
-        "    if not numbers:\n"
-        "        return None\n"
-        "    return max(numbers)\n"
+    "sorted_word_count": (
+        "def word_frequency_report(text):\n"
+        "    if not text.strip():\n"
+        "        return ''\n"
+        "    freq = {}\n"
+        "    for word in text.lower().split():\n"
+        "        freq[word] = freq.get(word, 0) + 1\n"
+        "    sorted_items = sorted(freq.items(), key=lambda x: (-x[1], x[0]))\n"
+        "    return ' '.join(w + ':' + str(c) for w, c in sorted_items)\n"
     ),
-    "filter_builtin": (
-        "def get_evens(numbers):\n"
-        "    return [n for n in numbers if n % 2 == 0]\n"
+    "deep_flatten": (
+        "def flatten(data):\n"
+        "    result = []\n"
+        "    for item in data:\n"
+        "        if isinstance(item, list):\n"
+        "            result.extend(flatten(item))\n"
+        "        else:\n"
+        "            result.append(item)\n"
+        "    return result\n"
     ),
 }
 

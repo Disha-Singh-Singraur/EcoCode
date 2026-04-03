@@ -27,6 +27,8 @@ This environment can be used to train next-generation coding agents that optimiz
 
 ```
 EcoCode/
+├── server/
+│   └── app.py               # FastAPI server entry point
 ├── env/
 │   ├── environment.py       # OpenEnv interface (reset, step, state)
 │   └── reward.py            # Trajectory-based reward function
@@ -40,10 +42,13 @@ EcoCode/
 ├── utils/
 │   ├── sandbox.py           # Sandboxed code execution
 │   └── code_analysis.py     # AST-based proxy metrics
-├── scripts/
-│   └── baseline.py          # Hybrid baseline agent (API + fallback)
-├── server.py                # FastAPI server
+├── scripts/                
+│   ├── baseline.py          # Legacy baseline script
+│   └── validate-submission.sh # Submission validator
+├── inference.py             # MANDATORY submission inference script
 ├── openenv.yaml             # OpenEnv metadata
+├── pyproject.toml           # Project metadata and entry points
+├── uv.lock                  # Dependency lockfile
 ├── Dockerfile               # Docker deployment
 ├── requirements.txt         # Python dependencies
 └── README.md
@@ -105,11 +110,11 @@ The agent can iterate for up to **5 steps** per episode. Episodes end early if a
 | `loop_invariant_motion` | Hard | Move constant computation outside loops |
 | `math_simplification` | Medium | Replace loop with O(1) Gaussian formula |
 | `any_builtin` | Easy | Use `any()` builtin instead of search loop |
-| `all_builtin` | Easy | Use `all()` builtin instead of search loop |
+| `matrix_transpose` | Hard | Optimize nested-loop transpose with `zip(*matrix)` |
 | `enumerate_builtin` | Easy | Use `enumerate()` instead of `range(len())` |
 | `zip_builtin` | Medium | Use `zip()` for parallel list iteration |
-| `max_builtin` | Easy | Use `max()` instead of tracking highest value |
-| `filter_builtin` | Medium | Use `filter()` or comprehension for conditional append |
+| `sorted_word_count` | Hard | Multi-stage word frequency with sorting and formatting |
+| `deep_flatten` | Hard | Optimize recursive list flattening to avoid O(n²) copies |
 
 ---
 
@@ -171,15 +176,15 @@ generator_vs_list       medium      0.436      ✅
 combined_opts           hard        0.798      ✅
 fibonacci_memoization   hard        0.300      ✅
 loop_invariant_motion   hard        0.775      ✅
-math_simplification     medium      0.725      ✅
-any_builtin             easy        0.815      ✅
-all_builtin             easy        0.815      ✅
-enumerate_builtin       easy        0.815      ✅
-zip_builtin             medium      0.815      ✅
-max_builtin             easy        0.815      ✅
-filter_builtin          medium      0.815      ✅
+math_simplification     medium      0.663      ✅
+any_builtin             easy        0.829      ✅
+matrix_transpose        hard        0.850      ✅
+enumerate_builtin       easy        0.925      ✅
+zip_builtin             medium      0.850      ✅
+sorted_word_count       hard        0.799      ✅
+deep_flatten            hard        0.606      ✅
 ───────────────────────────────────────────────────────
-Average Score:       0.741
+Average Score:       0.735
 Success Rate:        100% (15/15)
 ```
 
@@ -227,18 +232,19 @@ curl -X POST http://localhost:7860/grader \
 ### Local Development
 ```bash
 pip install -r requirements.txt
-python server.py
+python -m server.app
 # → http://localhost:7860
 ```
 
-### Run Baseline
-```bash
-# Deterministic fallback (no API key needed)
-python -m scripts.baseline
+### Run Inference Script (Competition Baseline)
+The mandatory inference script uses standardized environment variables for evaluation:
 
-# With OpenAI API (deterministic, temperature=0)
-export OPENAI_API_KEY="sk-..."
-python -m scripts.baseline
+```bash
+export API_BASE_URL="https://router.huggingface.co/v1"
+export MODEL_NAME="gpt-4o-mini"
+export HF_TOKEN="your-api-key"
+
+python inference.py
 ```
 
 ### Docker
@@ -248,6 +254,14 @@ docker run -p 7860:7860 ecocode
 ```
 
 Compatible with **Hugging Face Spaces** Docker runtime.
+
+### Submission Validation
+Before submitting your repo, run the pre-submission validator to ensure compliance:
+
+```bash
+# Provide your live space URL for the ping check
+bash ./scripts/validate-submission.sh https://your-space.hf.space
+```
 
 ---
 
@@ -266,3 +280,9 @@ Compatible with **Hugging Face Spaces** Docker runtime.
 - Baseline uses `temperature=0` with fixed prompts (API mode)
 - Fallback mode uses hardcoded optimal solutions
 - **No randomness** in any component
+
+---
+
+## 🌿 Carbon Estimation Methodology
+
+*Carbon estimates use a simplified proxy model (`execution_time × TDP_factor + memory × power_constant`) inspired by [CodeCarbon](https://codecarbon.io/) and [Strubell et al., 2019](https://arxiv.org/abs/1906.02243). These serve as illustrative proxies for awareness, not production-grade measurements. For hardware-specific accuracy, integrate RAPL-based energy readings or cloud provider carbon APIs.*

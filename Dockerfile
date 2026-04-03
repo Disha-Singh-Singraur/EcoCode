@@ -21,4 +21,4 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 COPY --chown=user:user . $HOME/app
 
 # Run the Fast API server
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "7860"]

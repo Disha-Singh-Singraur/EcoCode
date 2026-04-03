@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ecocode"
+version = "1.0.0"
+description = "Green Code Optimization Environment for AI Agents"
+authors = [
+    {name = "EcoCode Team", email = "team@ecocode.ai"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.5.0",
+    "openai>=1.6.0",
+    "pyyaml>=6.0",
+    "openenv-core>=0.2.0",
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[project.urls]
+Homepage = "https://huggingface.co/spaces/ecocode/ecocode"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["env*", "grader*", "models*", "tasks*", "utils*", "scripts*"]
