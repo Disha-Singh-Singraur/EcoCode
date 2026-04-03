@@ -24,8 +24,8 @@ from tasks.definitions import list_task_ids
 
 # ── Environment Variables ──────────────────────────────────────────
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
-API_KEY = os.getenv("OPENAI_API_KEY") or os.getenv("HF_TOKEN") or os.getenv("API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 # ── Configuration ──────────────────────────────────────────────────
 MAX_STEPS = 3
@@ -75,28 +75,26 @@ def parse_model_code(content: str) -> str:
 
 
 def main() -> None:
-    if not API_KEY:
-        print("Error: HF_TOKEN or API_KEY environment variable not set.")
+    if not HF_TOKEN:
+        print("Error: HF_TOKEN environment variable not set.")
         return
 
-    client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+    client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
     env = EcoCodeEnv()
     
     results = {}
     correct_count = 0
     total_tasks = 0
 
-    print("=" * 60)
-    print("EcoCode Inference Execution")
+    # ── START log ──────────────────────────────────────────────────────
+    print("START")
     print(f"Model: {MODEL_NAME}")
     print(f"Endpoint: {API_BASE_URL}")
-    print("=" * 60)
 
     for task_id in list_task_ids():
         total_tasks += 1
         obs = env.reset(task_id=task_id)
         
-        print(f"\n[Task] {task_id} ({obs.difficulty})")
         user_prompt = build_user_prompt(obs)
         
         done = False
@@ -108,7 +106,9 @@ def main() -> None:
 
         while not done and step_count < MAX_STEPS:
             step_count += 1
-            print(f"  Step {step_count}...")
+            
+            # ── STEP log ──────────────────────────────────────────────
+            print(f"STEP task={task_id} step={step_count}")
             
             try:
                 completion = client.chat.completions.create(
@@ -132,8 +132,9 @@ def main() -> None:
                 optimization = gr.get("optimization_score", 0.0)
                 reward_value = reward.score
                 
+                print(f"  score={final_score:.3f} correctness={correctness} reward={reward_value:.3f}")
+                
                 if correctness < 1.0:
-                    print(f"    Failed correctness. Feedback: {reward.feedback}")
                     user_prompt += (
                         f"\n\n--- Attempt {step_count} Failed ---\n"
                         f"Your code:\n```python\n{rewritten}\n```\n"
@@ -141,17 +142,15 @@ def main() -> None:
                         f"Please fix and optimize further. Return ONLY code."
                     )
                 elif reward_value < 0.01:
-                    print(f"    No improvement. Feedback: {reward.feedback}")
                     user_prompt += (
                         f"\n\n--- Attempt {step_count} No Improvement ---\n"
                         f"Feedback: {reward.feedback}\n"
                         f"Please optimize the logic further."
                     )
                 else:
-                    print(f"    Success! Score: {final_score:.3f}")
                     break
             except Exception as exc:
-                print(f"    Error: {exc}")
+                print(f"  error={exc}")
                 break
 
         if correctness >= 1.0:
@@ -164,15 +163,12 @@ def main() -> None:
             "optimization": optimization,
         }
 
-    # ── Summary ────────────────────────────────────────────────────────
-    print("\n" + "=" * 60)
+    # ── END log ────────────────────────────────────────────────────────
     total_score = sum(r["final_score"] for r in results.values())
     avg_score = total_score / total_tasks if total_tasks else 0.0
     success_rate = correct_count / total_tasks if total_tasks else 0.0
     
-    print(f"Average Score: {avg_score:.3f}")
-    print(f"Success Rate:  {success_rate:.0%} ({correct_count}/{total_tasks})")
-    print("=" * 60)
+    print(f"END average_score={avg_score:.3f} success_rate={success_rate:.0%} ({correct_count}/{total_tasks})")
 
     # Save to baseline_results.json for reproduction check
     with open("baseline_results.json", "w") as f:
@@ -186,3 +182,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
