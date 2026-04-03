@@ -70,10 +70,11 @@ class BaselineResponse(BaseModel):
 # ── Endpoints ──────────────────────────────────────────────────────────
 
 @app.post("/reset", response_model=Observation)
-def reset_env(request: ResetRequest):
+def reset_env(request: Optional[ResetRequest] = None):
     """Reset the environment with a task."""
     try:
-        obs = env.reset(task_id=request.task_id)
+        task_id = request.task_id if request else None
+        obs = env.reset(task_id=task_id)
         return obs
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
