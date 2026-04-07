@@ -4,13 +4,22 @@ Produces a structured GraderResult with:
   - correctness_score (binary gate)
   - optimization_score (AST-based)
   - penalty
-  - final_score (combined, 0.0–1.0)
+  - final_score (combined, strictly in (0, 1))
   - details (human-readable)
 """
 
 from models.schemas import GraderResult
 from utils.sandbox import run_test_case, run_benchmark
 from utils.code_analysis import analyze_code, compute_improvement_score
+
+# Validator requires scores strictly within (0, 1) — not 0.0 and not 1.0
+_SCORE_MIN = 0.001
+_SCORE_MAX = 0.999
+
+
+def _clamp(score: float) -> float:
+    """Clamp score to open interval (0, 1) as required by the validator."""
+    return max(_SCORE_MIN, min(_SCORE_MAX, score))
 
 
 class Grader:
@@ -39,10 +48,10 @@ class Grader:
         err = validate_code(rewritten_code)
         if err:
             return GraderResult(
-                correctness_score=0.0,
-                optimization_score=0.0,
+                correctness_score=_SCORE_MIN,
+                optimization_score=_SCORE_MIN,
                 penalty=0.5,
-                final_score=0.0,
+                final_score=_SCORE_MIN,
                 details=f"Invalid code: {err}",
             )
 
@@ -68,15 +77,16 @@ class Grader:
             details_parts.insert(
                 0, f"Correctness: {passed_count}/{total_tests} tests passed"
             )
+            partial = _clamp(passed_count / total_tests * 0.4) if total_tests else _SCORE_MIN
             return GraderResult(
-                correctness_score=0.0,
-                optimization_score=0.0,
+                correctness_score=_clamp(passed_count / total_tests) if total_tests else _SCORE_MIN,
+                optimization_score=_SCORE_MIN,
                 penalty=0.0,
-                final_score=0.0,
+                final_score=partial,
                 details="\n".join(details_parts),
             )
 
-        correctness_score = 1.0
+        correctness_score = _SCORE_MAX
         details_parts.append(f"Correctness: {total_tests}/{total_tests} tests passed")
 
         # ── 3. Optimization scoring ────────────────────────────────────
@@ -94,10 +104,9 @@ class Grader:
 
         # ── 5. Combine ─────────────────────────────────────────────────
         # Weighted: 40% correctness gate + 60% optimization, minus penalty
-        final_score = max(
-            0.0,
-            min(1.0, correctness_score * 0.4 + optimization_score * 0.6 - penalty),
-        )
+        # Clamped to strictly open interval (0, 1) per validator requirement
+        raw_score = correctness_score * 0.4 + optimization_score * 0.6 - penalty
+        final_score = _clamp(raw_score)
         details_parts.append(f"Final score: {final_score:.3f}")
 
         # ── 6. Benchmarking (Safe & Optional) ──────────────────────────────

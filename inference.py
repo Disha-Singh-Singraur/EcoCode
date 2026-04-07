@@ -202,7 +202,7 @@ def main() -> None:
                 break
 
         # ── [END] ──────────────────────────────────────────────────
-        score = min(max(final_score, 0.0), 1.0)  # clamp to [0, 1]
+        score = min(max(final_score, 0.001), 0.999)  # clamp to strictly open (0, 1) per validator
         success = score >= SUCCESS_SCORE_THRESHOLD
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
