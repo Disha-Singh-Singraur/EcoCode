@@ -87,7 +87,7 @@ class EcoCodeEnv:
 
         # Update state only if code is valid and correct
         if (
-            grader_result.correctness_score >= 1.0
+            grader_result.correctness_score >= 0.99  # max is 0.999 after clamping
             and grader_result.penalty < 0.5
         ):
             self._current_code = action.rewritten_code
