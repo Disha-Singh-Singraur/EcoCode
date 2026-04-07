@@ -125,7 +125,7 @@ def main() -> None:
 
         done = False
         steps_taken = 0
-        final_score = 0.0
+        final_score = 0.001
         correctness = 0.0
         rewards: List[float] = []
         success = False
@@ -190,12 +190,12 @@ def main() -> None:
 
             except Exception as exc:
                 last_error = str(exc)
-                rewards.append(0.0)
+                rewards.append(0.001)
                 # ── [STEP] on error ────────────────────────────────
                 log_step(
                     step=step,
                     action=f"submit_code('{task_id}_step{step}')",
-                    reward=0.0,
+                    reward=0.001,
                     done=False,
                     error=last_error,
                 )

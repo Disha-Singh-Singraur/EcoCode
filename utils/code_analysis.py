@@ -7,6 +7,10 @@ abstract syntax tree to estimate optimization quality.
 import ast
 from typing import Any, Dict
 
+# Scores must be strictly within (0, 1) per validator
+_SCORE_MIN = 0.001
+_SCORE_MAX = 0.999
+
 
 # Builtins / methods that indicate good Python style
 EFFICIENT_BUILTINS = frozenset({
@@ -204,10 +208,11 @@ def compute_improvement_score(
     if orig_red > 0 and new_red < orig_red:
         score += 0.10 * (1.0 - new_red / orig_red)
 
-    # Normalize to 0.0–1.0
+    # Normalize to strictly (0, 1) per validator requirement
     if max_possible > 0:
-        return min(1.0, score / max_possible * 1.25)  # slight scale factor
-    return 0.0
+        raw = min(1.0, score / max_possible * 1.25)  # slight scale factor
+        return max(_SCORE_MIN, min(_SCORE_MAX, raw))
+    return _SCORE_MIN
 
 
 def metrics_are_equal(a: Dict[str, Any], b: Dict[str, Any]) -> bool:
