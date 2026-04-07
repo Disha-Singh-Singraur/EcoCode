@@ -126,7 +126,7 @@ def main() -> None:
         done = False
         steps_taken = 0
         final_score = 0.01
-        correctness = 0.0
+        correctness = 0.01
         rewards: List[float] = []
         success = False
         last_error: Optional[str] = None
@@ -155,8 +155,8 @@ def main() -> None:
                 obs, reward, done, info = env.step(action)
 
                 gr = info.get("grader_result", {})
-                final_score = gr.get("final_score", 0.0)
-                correctness = gr.get("correctness_score", 0.0)
+                final_score = gr.get("final_score", 0.01)
+                correctness = gr.get("correctness_score", 0.01)
                 reward_value = reward.score
 
                 rewards.append(reward_value)
@@ -172,7 +172,7 @@ def main() -> None:
                 )
 
                 # If incorrect, add feedback for retry
-                if correctness < 1.0:
+                if correctness < 0.99:
                     user_prompt += (
                         f"\n\n--- Attempt {step} Failed ---\n"
                         f"Your code:\n```python\n{rewritten}\n```\n"
@@ -218,7 +218,7 @@ def main() -> None:
     total_tasks = len(all_results)
     total_score = sum(r["final_score"] for r in all_results.values())
     avg_score = total_score / total_tasks if total_tasks else 0.0
-    correct_count = sum(1 for r in all_results.values() if r.get("correctness", 0) >= 1.0)
+    correct_count = sum(1 for r in all_results.values() if r.get("correctness", 0) >= 0.99)
 
     with open("baseline_results.json", "w") as f:
         json.dump({

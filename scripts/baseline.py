@@ -207,10 +207,10 @@ def run_baseline_evaluation() -> dict:
         total_tasks += 1
         obs = env.reset(task_id=task_id)
 
-        correctness = 0.0
-        final_score = 0.0
-        optimization = 0.0
-        reward_score = 0.0
+        correctness = 0.01
+        final_score = 0.01
+        optimization = 0.01
+        reward_score = 0.01
 
         if use_api:
             user_prompt = build_user_prompt(obs)
@@ -225,12 +225,12 @@ def run_baseline_evaluation() -> dict:
                 obs2, reward, done, info = env.step(action)
                 
                 gr = info.get("grader_result", {})
-                final_score = gr.get("final_score", 0.0)
-                correctness = gr.get("correctness_score", 0.0)
-                optimization = gr.get("optimization_score", 0.0)
+                final_score = gr.get("final_score", 0.01)
+                correctness = gr.get("correctness_score", 0.01)
+                optimization = gr.get("optimization_score", 0.01)
                 reward_score = reward.score
                 
-                if correctness < 1.0 or reward_score < 0.0:
+                if correctness < 0.99 or reward_score < 0.01:
                     details = gr.get("details", "")
                     user_prompt += (
                         f"\n\n--- Attempt {step_count} Failed ---\n"
@@ -247,12 +247,12 @@ def run_baseline_evaluation() -> dict:
             obs2, reward, done, info = env.step(action)
 
             gr = info.get("grader_result", {})
-            final_score = gr.get("final_score", 0.0)
-            correctness = gr.get("correctness_score", 0.0)
-            optimization = gr.get("optimization_score", 0.0)
+            final_score = gr.get("final_score", 0.01)
+            correctness = gr.get("correctness_score", 0.01)
+            optimization = gr.get("optimization_score", 0.01)
             reward_score = reward.score
 
-        if correctness >= 1.0:
+        if correctness >= 0.99:
             correct_count += 1
 
         results[task_id] = {
@@ -274,7 +274,7 @@ def run_baseline_evaluation() -> dict:
     for tid, res in results.items():
         score = res["final_score"]
         total_score += score
-        correct = "Yes" if res["correctness"] >= 1.0 else "No"
+        correct = "Yes" if res["correctness"] >= 0.99 else "No"
         print(f"{tid:<20} {res['difficulty']:<10} {score:<10.3f} {correct:<10}")
 
     avg_score = total_score / total_tasks if total_tasks else 0.0

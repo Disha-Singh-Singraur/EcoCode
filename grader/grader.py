@@ -82,7 +82,7 @@ class Grader:
             return GraderResult(
                 correctness_score=_clamp(passed_count / total_tests) if total_tests else _SCORE_MIN,
                 optimization_score=_SCORE_MIN,
-                penalty=0.0,
+                penalty=0.01,
                 final_score=partial,
                 details="\n".join(details_parts),
             )
@@ -98,7 +98,7 @@ class Grader:
         details_parts.append(f"Optimization score: {optimization_score:.3f}")
 
         # ── 4. No-improvement penalty ──────────────────────────────────
-        penalty = 0.0
+        penalty = 0.01
         if optimization_score < 0.01:
             penalty = 0.1
             details_parts.append("Penalty: no measurable optimization improvement")

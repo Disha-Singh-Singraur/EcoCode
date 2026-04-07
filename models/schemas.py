@@ -26,9 +26,9 @@ class Action(BaseModel):
 
 class RewardBreakdown(BaseModel):
     """Detailed breakdown of reward components."""
-    correctness: float = Field(..., description="1.0 if all tests pass, 0.0 otherwise")
+    correctness: float = Field(..., description="Correctness score")
     optimization: float = Field(..., description="Optimization improvement score")
-    penalty: float = Field(0.0, description="Penalty applied")
+    penalty: float = Field(0.01, description="Penalty applied")
     reason: str = Field("", description="Human-readable explanation")
 
 
@@ -41,10 +41,10 @@ class Reward(BaseModel):
 
 class GraderResult(BaseModel):
     """Structured result from the deterministic grader."""
-    correctness_score: float = Field(..., description="0.0 or 1.0 binary gate")
-    optimization_score: float = Field(..., description="0.0-1.0 AST improvement score")
-    penalty: float = Field(0.0, description="Penalty for no improvement or invalid code")
-    final_score: float = Field(..., description="Combined score clamped to 0.0-1.0")
+    correctness_score: float = Field(..., description="Binary correctness gate, strictly in (0, 1)")
+    optimization_score: float = Field(..., description="AST improvement score, strictly in (0, 1)")
+    penalty: float = Field(0.01, description="Penalty for no improvement or invalid code")
+    final_score: float = Field(..., description="Combined score, strictly in (0, 1)")
     details: str = Field("", description="Human-readable grading explanation")
     
     # Optional performance benchmarking

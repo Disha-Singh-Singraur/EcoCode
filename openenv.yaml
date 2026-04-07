@@ -125,16 +125,16 @@ schemas:
     properties:
       correctness_score:
         type: number
-        description: "0.0 or 1.0 (binary correctness gate)"
+        description: "Binary correctness gate, strictly in (0, 1)"
       optimization_score:
         type: number
-        description: "0.0-1.0 AST improvement score"
+        description: "AST improvement score, strictly in (0, 1)"
       penalty:
         type: number
         description: "Penalty for no improvement or invalid code"
       final_score:
         type: number
-        description: "Combined score, clamped to 0.0-1.0"
+        description: "Combined score, strictly in (0, 1)"
       details:
         type: string
         description: "Human-readable grading explanation"

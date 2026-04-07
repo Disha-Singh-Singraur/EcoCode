@@ -45,8 +45,8 @@ def compute_reward(
         return Reward(
             score=_INVALID_SCORE,
             breakdown=RewardBreakdown(
-                correctness=0.001,
-                optimization=0.001,
+                correctness=0.01,
+                optimization=0.01,
                 penalty=_INVALID_SCORE,
                 reason="Invalid or unsafe code submitted",
             ),
@@ -60,7 +60,7 @@ def compute_reward(
             score=_INCORRECT_SCORE,
             breakdown=RewardBreakdown(
                 correctness=grader_result.correctness_score,
-                optimization=0.001,
+                optimization=0.01,
                 penalty=_INCORRECT_SCORE,
                 reason="Incorrect output — test cases failed",
             ),
@@ -78,9 +78,9 @@ def compute_reward(
         return Reward(
             score=round(score, 4),
             breakdown=RewardBreakdown(
-                correctness=0.999,
+                correctness=0.99,
                 optimization=grader_result.optimization_score,
-                penalty=0.001,
+                penalty=0.01,
                 reason=f"Significant improvement (+{improvement:.3f})",
             ),
             feedback="Great optimization! Your code is more efficient.",
@@ -92,9 +92,9 @@ def compute_reward(
         return Reward(
             score=round(score, 4),
             breakdown=RewardBreakdown(
-                correctness=0.999,
+                correctness=0.99,
                 optimization=grader_result.optimization_score,
-                penalty=0.001,
+                penalty=0.01,
                 reason=f"Partial improvement (+{improvement:.3f})",
             ),
             feedback="Some improvement detected. Keep optimizing!",
@@ -104,7 +104,7 @@ def compute_reward(
         return Reward(
             score=_NO_IMPROVE_SCORE,
             breakdown=RewardBreakdown(
-                correctness=0.999,
+                correctness=0.99,
                 optimization=grader_result.optimization_score,
                 penalty=_NO_IMPROVE_SCORE,
                 reason="No optimization improvement detected",
