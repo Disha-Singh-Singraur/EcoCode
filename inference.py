@@ -9,13 +9,19 @@ MANDATORY
     
 - The inference script must be named `inference.py` and placed in the root directory of the project
 - Participants must use OpenAI Client for all LLM calls using above variables
+
+STDOUT FORMAT
+- The script emits exactly three line types to stdout per task:
+
+    [START] task=<task_name> env=ecocode model=<model_name>
+    [STEP]  step=<n> action=<action_str> reward=<0.00> done=<true|false> error=<msg|null>
+    [END]   success=<true|false> steps=<n> score=<score> rewards=<r1,r2,...,rn>
 """
 
 import os
 import json
-import re
 import textwrap
-from typing import List, Optional, Dict
+from typing import List, Optional
 
 from openai import OpenAI
 from env.environment import EcoCodeEnv
@@ -28,9 +34,11 @@ MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 # ── Configuration ──────────────────────────────────────────────────
+BENCHMARK = "ecocode"
 MAX_STEPS = 3
 TEMPERATURE = 0.0  # Deterministic for baseline
 MAX_TOKENS = 1024
+SUCCESS_SCORE_THRESHOLD = 0.5  # score in [0, 1]
 
 SYSTEM_PROMPT = (
     "You are an expert Python developer specializing in code optimization. "
@@ -47,6 +55,29 @@ SYSTEM_PROMPT = (
 )
 
 
+# ── Structured Logging Helpers ─────────────────────────────────────
+def log_start(task: str, env: str, model: str) -> None:
+    print(f"[START] task={task} env={env} model={model}", flush=True)
+
+
+def log_step(step: int, action: str, reward: float, done: bool, error: Optional[str]) -> None:
+    error_val = error if error else "null"
+    done_val = str(done).lower()
+    print(
+        f"[STEP] step={step} action={action} reward={reward:.2f} done={done_val} error={error_val}",
+        flush=True,
+    )
+
+
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    print(
+        f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}",
+        flush=True,
+    )
+
+
+# ── Prompt Builders ────────────────────────────────────────────────
 def build_user_prompt(observation) -> str:
     """Build a fixed-format user prompt from an observation."""
     test_info = "\n".join(
@@ -74,6 +105,7 @@ def parse_model_code(content: str) -> str:
     return content
 
 
+# ── Main ───────────────────────────────────────────────────────────
 def main() -> None:
     if not HF_TOKEN:
         print("Error: HF_TOKEN environment variable not set.", flush=True)
@@ -81,34 +113,31 @@ def main() -> None:
 
     client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
     env = EcoCodeEnv()
-    
-    results = {}
-    steps_per_task = {}
-    correct_count = 0
-    total_tasks = 0
 
-    # ── START log ──────────────────────────────────────────────────────
-    print(f"[START] model={MODEL_NAME}", flush=True)
+    all_results = {}
 
     for task_id in list_task_ids():
-        total_tasks += 1
+        # ── [START] ────────────────────────────────────────────────
+        log_start(task=task_id, env=BENCHMARK, model=MODEL_NAME)
+
         obs = env.reset(task_id=task_id)
-        
         user_prompt = build_user_prompt(obs)
-        
+
         done = False
-        step_count = 0
+        steps_taken = 0
         final_score = 0.0
         correctness = 0.0
-        optimization = 0.0
-        reward_value = 0.0
+        rewards: List[float] = []
+        success = False
+        last_error: Optional[str] = None
 
-        while not done and step_count < MAX_STEPS:
-            step_count += 1
-            
-            # ── STEP log ──────────────────────────────────────────────
-            print(f"[STEP] task={task_id} step={step_count}", flush=True)
-            
+        for step in range(1, MAX_STEPS + 1):
+            if done:
+                break
+
+            steps_taken = step
+            last_error = None
+
             try:
                 completion = client.chat.completions.create(
                     model=MODEL_NAME,
@@ -121,70 +150,84 @@ def main() -> None:
                 )
                 response_text = completion.choices[0].message.content or ""
                 rewritten = parse_model_code(response_text)
-                
+
                 action = Action(rewritten_code=rewritten)
                 obs, reward, done, info = env.step(action)
-                
+
                 gr = info.get("grader_result", {})
                 final_score = gr.get("final_score", 0.0)
                 correctness = gr.get("correctness_score", 0.0)
-                optimization = gr.get("optimization_score", 0.0)
                 reward_value = reward.score
-                
-                print(f"[STEP] task={task_id} step={step_count} reward={reward_value:.3f} score={final_score:.3f}", flush=True)
-                
+
+                rewards.append(reward_value)
+
+                # ── [STEP] ─────────────────────────────────────────
+                action_str = f"submit_code('{task_id}_step{step}')"
+                log_step(
+                    step=step,
+                    action=action_str,
+                    reward=reward_value,
+                    done=done,
+                    error=None,
+                )
+
+                # If incorrect, add feedback for retry
                 if correctness < 1.0:
                     user_prompt += (
-                        f"\n\n--- Attempt {step_count} Failed ---\n"
+                        f"\n\n--- Attempt {step} Failed ---\n"
                         f"Your code:\n```python\n{rewritten}\n```\n"
                         f"Feedback: {reward.feedback}\n"
                         f"Please fix and optimize further. Return ONLY code."
                     )
                 elif reward_value < 0.01:
                     user_prompt += (
-                        f"\n\n--- Attempt {step_count} No Improvement ---\n"
+                        f"\n\n--- Attempt {step} No Improvement ---\n"
                         f"Feedback: {reward.feedback}\n"
                         f"Please optimize the logic further."
                     )
                 else:
-                    break
+                    done = True  # Good result, stop
+
             except Exception as exc:
-                print(f"[STEP] task={task_id} step={step_count} error={exc}", flush=True)
+                last_error = str(exc)
+                rewards.append(0.0)
+                # ── [STEP] on error ────────────────────────────────
+                log_step(
+                    step=step,
+                    action=f"submit_code('{task_id}_step{step}')",
+                    reward=0.0,
+                    done=False,
+                    error=last_error,
+                )
                 break
 
-        if correctness >= 1.0:
-            correct_count += 1
+        # ── [END] ──────────────────────────────────────────────────
+        score = min(max(final_score, 0.0), 1.0)  # clamp to [0, 1]
+        success = score >= SUCCESS_SCORE_THRESHOLD
+        log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
-        steps_per_task[task_id] = step_count
-        results[task_id] = {
+        all_results[task_id] = {
             "task_id": task_id,
             "final_score": final_score,
             "correctness": correctness,
-            "optimization": optimization,
+            "success": success,
+            "steps": steps_taken,
         }
 
-    # ── END log ────────────────────────────────────────────────────────
-    total_score = sum(r["final_score"] for r in results.values())
+    # ── Save results to file ───────────────────────────────────────
+    total_tasks = len(all_results)
+    total_score = sum(r["final_score"] for r in all_results.values())
     avg_score = total_score / total_tasks if total_tasks else 0.0
-    success_rate = correct_count / total_tasks if total_tasks else 0.0
+    correct_count = sum(1 for r in all_results.values() if r.get("correctness", 0) >= 1.0)
 
-    # Per-task END markers
-    for tid, r in results.items():
-        print(f"[END] task={tid} score={r['final_score']:.3f} steps={steps_per_task.get(tid, 0)}", flush=True)
-
-    # Final summary
-    print(f"[END] score={avg_score:.3f} success_rate={success_rate:.0%} tasks={correct_count}/{total_tasks}", flush=True)
-
-    # Save to baseline_results.json for reproduction check
     with open("baseline_results.json", "w") as f:
         json.dump({
             "model": MODEL_NAME,
             "average_score": avg_score,
-            "success_rate": success_rate,
-            "tasks": results
+            "success_rate": correct_count / total_tasks if total_tasks else 0.0,
+            "tasks": all_results
         }, f, indent=2)
 
 
 if __name__ == "__main__":
     main()
-
