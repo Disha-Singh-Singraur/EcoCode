@@ -76,20 +76,19 @@ def parse_model_code(content: str) -> str:
 
 def main() -> None:
     if not HF_TOKEN:
-        print("Error: HF_TOKEN environment variable not set.")
+        print("Error: HF_TOKEN environment variable not set.", flush=True)
         return
 
     client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
     env = EcoCodeEnv()
     
     results = {}
+    steps_per_task = {}
     correct_count = 0
     total_tasks = 0
 
     # ── START log ──────────────────────────────────────────────────────
-    print("START")
-    print(f"Model: {MODEL_NAME}")
-    print(f"Endpoint: {API_BASE_URL}")
+    print(f"[START] model={MODEL_NAME}", flush=True)
 
     for task_id in list_task_ids():
         total_tasks += 1
@@ -108,7 +107,7 @@ def main() -> None:
             step_count += 1
             
             # ── STEP log ──────────────────────────────────────────────
-            print(f"STEP task={task_id} step={step_count}")
+            print(f"[STEP] task={task_id} step={step_count}", flush=True)
             
             try:
                 completion = client.chat.completions.create(
@@ -132,7 +131,7 @@ def main() -> None:
                 optimization = gr.get("optimization_score", 0.0)
                 reward_value = reward.score
                 
-                print(f"  score={final_score:.3f} correctness={correctness} reward={reward_value:.3f}")
+                print(f"[STEP] task={task_id} step={step_count} reward={reward_value:.3f} score={final_score:.3f}", flush=True)
                 
                 if correctness < 1.0:
                     user_prompt += (
@@ -150,12 +149,13 @@ def main() -> None:
                 else:
                     break
             except Exception as exc:
-                print(f"  error={exc}")
+                print(f"[STEP] task={task_id} step={step_count} error={exc}", flush=True)
                 break
 
         if correctness >= 1.0:
             correct_count += 1
 
+        steps_per_task[task_id] = step_count
         results[task_id] = {
             "task_id": task_id,
             "final_score": final_score,
@@ -167,8 +167,13 @@ def main() -> None:
     total_score = sum(r["final_score"] for r in results.values())
     avg_score = total_score / total_tasks if total_tasks else 0.0
     success_rate = correct_count / total_tasks if total_tasks else 0.0
-    
-    print(f"END average_score={avg_score:.3f} success_rate={success_rate:.0%} ({correct_count}/{total_tasks})")
+
+    # Per-task END markers
+    for tid, r in results.items():
+        print(f"[END] task={tid} score={r['final_score']:.3f} steps={steps_per_task.get(tid, 0)}", flush=True)
+
+    # Final summary
+    print(f"[END] score={avg_score:.3f} success_rate={success_rate:.0%} tasks={correct_count}/{total_tasks}", flush=True)
 
     # Save to baseline_results.json for reproduction check
     with open("baseline_results.json", "w") as f:
