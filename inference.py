@@ -125,7 +125,7 @@ def main() -> None:
 
         done = False
         steps_taken = 0
-        final_score = 0.001
+        final_score = 0.01
         correctness = 0.0
         rewards: List[float] = []
         success = False
@@ -190,19 +190,19 @@ def main() -> None:
 
             except Exception as exc:
                 last_error = str(exc)
-                rewards.append(0.001)
+                rewards.append(0.01)
                 # ── [STEP] on error ────────────────────────────────
                 log_step(
                     step=step,
                     action=f"submit_code('{task_id}_step{step}')",
-                    reward=0.001,
+                    reward=0.01,
                     done=False,
                     error=last_error,
                 )
                 break
 
         # ── [END] ──────────────────────────────────────────────────
-        score = min(max(final_score, 0.001), 0.999)  # clamp to strictly open (0, 1) per validator
+        score = min(max(final_score, 0.01), 0.99)  # clamp to strictly open (0,1), safe at 2dp
         success = score >= SUCCESS_SCORE_THRESHOLD
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 

@@ -8,8 +8,9 @@ import ast
 from typing import Any, Dict
 
 # Scores must be strictly within (0, 1) per validator
-_SCORE_MIN = 0.001
-_SCORE_MAX = 0.999
+# 0.01/0.99 are safe with :.2f formatting (0.001 → "0.00", 0.999 → "1.00" breaks it)
+_SCORE_MIN = 0.01
+_SCORE_MAX = 0.99
 
 
 # Builtins / methods that indicate good Python style

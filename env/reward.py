@@ -11,12 +11,12 @@ _INVALID_SCORE   = 0.05   # invalid / unsafe code
 _INCORRECT_SCORE = 0.10   # correct syntax but wrong output
 _NO_IMPROVE_SCORE = 0.15  # correct but no optimization gain
 _PARTIAL_MIN     = 0.20   # minimum for partial improvement
-_PARTIAL_MAX     = 0.50   # maximum for partial improvement
-_GOOD_MIN        = 0.50   # minimum for significant improvement
-_GOOD_MAX        = 0.999  # maximum (never reaches 1.0)
+_PARTIAL_MAX     = 0.49   # maximum for partial improvement (safe at 2dp)
+_GOOD_MIN        = 0.51   # minimum for significant improvement (safe at 2dp)
+_GOOD_MAX        = 0.99   # maximum ("0.99" with :.2f, never reaches 1.0)
 
 
-def _clamp(score: float, lo: float = 0.001, hi: float = 0.999) -> float:
+def _clamp(score: float, lo: float = 0.01, hi: float = 0.99) -> float:
     return max(lo, min(hi, score))
 
 

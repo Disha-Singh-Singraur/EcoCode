@@ -13,8 +13,9 @@ from utils.sandbox import run_test_case, run_benchmark
 from utils.code_analysis import analyze_code, compute_improvement_score
 
 # Validator requires scores strictly within (0, 1) — not 0.0 and not 1.0
-_SCORE_MIN = 0.001
-_SCORE_MAX = 0.999
+# Use 0.01/0.99 so they format correctly as "0.01"/"0.99" with :.2f
+_SCORE_MIN = 0.01
+_SCORE_MAX = 0.99
 
 
 def _clamp(score: float) -> float:
